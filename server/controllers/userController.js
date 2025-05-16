@@ -444,7 +444,7 @@ exports.ragSearch = async(req, res) => {
                name : `Search User Query`,          
                page : 'search',
             },
-            user : user,
+            user : await findUser(userID),
             transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
             budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
             goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
@@ -496,18 +496,18 @@ exports.search = async(req, res) => {
             budgets      = await searchBudget(userID,el,path)
             goals        = await searchGoal(userID,el,path)      
          }
-         // console.log("Before forEach Loop ", transactions,budgets,gols)
-         // transactions.forEach(async el =>{
-         //    transactionList.push(el);
-         // })
-         // budgets.forEach(async el =>{
-         //    budgetList.push(el);
-         // })
-         // goals.forEach(async el =>{
-         //    goalList.push(el);
-         // })
+         console.log("Before forEach Loop ", transactions,budgets,gols)
+         transactions.forEach(async el =>{
+            transactionList.push(el);
+         })
+         budgets.forEach(async el =>{
+            budgetList.push(el);
+         })
+         goals.forEach(async el =>{
+            goalList.push(el);
+         })
          
-         // console.log("After forEach Loop ", transactionList, budgetList, golList)
+         console.log("After forEach Loop ", transactionList, budgetList, golList)
       })
       console.log("query : ", transactionList,budgetList,goalList)
       if(!transactionList & !budgetList & !goalList){
