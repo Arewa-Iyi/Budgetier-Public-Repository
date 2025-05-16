@@ -90,33 +90,32 @@ def query_documents(user, query, col):
 
 '''
 def main():
-    #user =   sys.argv[1]    
-    #query =  sys.argv[2]
+    user =   sys.argv[1]    
+    query =  sys.argv[2]
 
     print("in main")
-    user = '68221dbc4c9eb42b7d1c3f79'
-    query = 'Utilities'
+    
 
-    #process_transaction_embeddings(user)
+    process_transaction_embeddings(user)
     process_budget_embeddings(user)
-    #process_goal_embeddings(user)
+    process_goal_embeddings(user)
 
-    #set_t = query_documents(user, query, col_t)
+    set_t = query_documents(user, query, col_t)
     set_b = query_documents(user, query, col_b)
-    #set_g = query_documents(user, query, col_g)
+    set_g = query_documents(user, query, col_g)
 
-    # try:
+    try:
 
-    #     with open("./server/controllers/results/t_results.json", 'w', encoding="utf-8") as file_t:
-    #         json.dump(set_t, file_t, indent=4)
-    #     with open("./server/controllers/results/b_results.json", 'w', encoding="utf-8") as file_b:
-    #         json.dump(set_b, file_b, indent=4)
-    #     with open("./server/controllers/results/g_results.json", 'w', encoding="utf-8") as file_g:
-    #         json.dump(set_g, file_g, indent=4)
-    #         print(set_t, set_b, set_g)
+        with open("./server/controllers/results/t_results.json", 'w', encoding="utf-8") as file_t:
+            json.dump(set_t, file_t, indent=4)
+        with open("./server/controllers/results/b_results.json", 'w', encoding="utf-8") as file_b:
+            json.dump(set_b, file_b, indent=4)
+        with open("./server/controllers/results/g_results.json", 'w', encoding="utf-8") as file_g:
+            json.dump(set_g, file_g, indent=4)
+            print(set_t, set_b, set_g)
 
-    # except Exception as e :
-    #     print(e)
+    except Exception as e :
+        print(e)
 
 
 main()
