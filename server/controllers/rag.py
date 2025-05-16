@@ -103,7 +103,7 @@ def query_documents(user, query, col):
     return query_set
 
 '''
-This is the main function that process system arguement, processes and queries embeddings for each collection.
+This is the main function that process system arguements, processes and queries embeddings for each collection.
 The results and then saved to corresponding json files.
 '''
 def main():
