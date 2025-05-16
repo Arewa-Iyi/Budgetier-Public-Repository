@@ -561,21 +561,7 @@ exports.searchDisplay = async(req, res) =>{
       //const goalList = req.session.user.g_search_display;
 
       const user = await findUser(userID);
-      const locals = {
-         title : 'Main Dashboard',
-         description : 'Free NodeJS User Management Syestem',
-         file : './dashboard/search.ejs',
-         messages : req.session.user.messages,
-         board : "dashboard",
-         user : user,
-         // exportFile,
-        // export : await generateCsv(csvConfig)(await exportTransctionList(userID)),
-         transactions: await getTransactionList(userID,1,3),
-         budgets: await getBudgetList(userID,1,3),
-         goals : await getGoalList(userID,1,3)
-      }
-      req.session.user.messages = [];
-      res.render('main', locals);
+     
       let perPage = 3;
       let t_page = req.query.t_page || 1;
       let b_page = req.query.b_page || 1;
@@ -600,7 +586,7 @@ exports.searchDisplay = async(req, res) =>{
          t_pages : Math.ceil(transactionList.length/perPage),
          b_pages : Math.ceil(budgetList.length/perPage),
          g_pages : Math.ceil(goalList.length/perPage)
-
+      }
       
       res.render('main', locals)
    }catch(error){
