@@ -1,3 +1,18 @@
+'''
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 5/15/2025
+ * File Name: rag.py
+ * 
+ * Project : Budgetier Capstone Project Post Capstone Improvements
+ * Description : The purpose of the rag.py file is to use 
+ * HuggingFace Sentence Transformer to calculate embeddings for the
+ * documents in the Budgetier Accounts database. A semantic vector of
+ * 384 attributes is embedded in each document in each collection of the
+ * Accounts database. When a query is requested, a semantic vector is created
+ * and a Vector search is conducted to aggregate matching documents.
+ * The aggregated documents and saved to seperate json files for each collection.
+ * collection i
+'''
 import pymongo
 import requests
 import os
@@ -16,7 +31,8 @@ col_b = db.Budget
 col_g = db.Goal
 
 '''
-
+Function to generate semantic vector via HuggingFace Sentence Transformer.
+Returns a list of embeddings.
 '''
 def generate_embedding(test) -> list[float]:
     model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -26,7 +42,7 @@ def generate_embedding(test) -> list[float]:
     
     return embeddings.tolist()
 '''
-
+Function to process transaction documents and generate embeddings containing category and description.
 '''
 def process_transaction_embeddings(user):
     for doc in col_t.find({'userID': ObjectId(user), 'description' : {"$exists" : True}}):      
@@ -37,7 +53,7 @@ def process_transaction_embeddings(user):
         doc['desc_embedding'] = embedding
         col_t.replace_one({'_id': doc['_id']}, doc)
 '''
-
+Function to process budget documents and generate embeddings containing name, category and description.
 '''
 def process_budget_embeddings(user):
     for doc in col_b.find({'userID': ObjectId(user), 'description' : {"$exists" : True}}):  
@@ -49,7 +65,7 @@ def process_budget_embeddings(user):
         doc['desc_embedding'] = embedding
         col_b.replace_one({'_id': doc['_id']}, doc)
 '''
-
+Function to process goal documents and generate embeddings containing name, category and description.
 '''
 def process_goal_embeddings(user):
     for doc in col_g.find({'userID': ObjectId(user), 'description' : {"$exists" : True}}):
@@ -62,7 +78,7 @@ def process_goal_embeddings(user):
         col_g.replace_one({'_id': doc['_id']}, doc)
 
 '''
-
+Function to process vector search aggregating  documents with similar embedded attributes.
 '''
 def query_documents(user, query, col):
 
@@ -87,7 +103,8 @@ def query_documents(user, query, col):
     return query_set
 
 '''
-
+This is the main function that process system arguement, processes and queries embeddings for each collection.
+The results and then saved to corresponding json files.
 '''
 def main():
     user =   sys.argv[1]    
