@@ -1,0 +1,45 @@
+ <!-- 
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: home.ejs
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the home.ejs file is to display the home page
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="/home.css" rel="stylesheet">
+    <title>Budgetier</title>
+  </head>
+  <body>
+    <div class = "hero">
+      <nav>
+        <img src = "/icon.PNG" class = "icon anim">
+        <ul>
+          <li><a href ="#">Features</a></li>
+          <li><a href ="#">About</a></li>
+        </ul>
+        <div>
+          <a href ="/register" class = "signup-btn" >Register</a>
+          <a href ="/login" class = "btn">Log In</a>         
+        </div>
+      </nav>
+      <div class = "content">
+
+       <h2>Think Top Tier... </h2><h1 class = "anim"> &emsp; Think Budgetier!</h1><br>
+       <p class = "anim"> Take a journey to financial freedom. Budgetier is here 
+        to help you manage your finances and maintain independence.</p>
+       
+       <a href="/register" class = "btn anim"> Join Now</a>
+    </div>
+   
+    <!-- You can also require other files to run in this process -->
+    <script src="./js/renderer.js"></script>
+  </body>
+</html>

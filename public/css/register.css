@@ -1,0 +1,91 @@
+/**
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: register.css
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the register.css file is 
+ * format the layout for the register.ejs webpage
+ * 
+ * Reference : JavaScript Academy.
+ *             (2021, October 10). Form validation using Javascript on the client side for beginners. 
+ *             www.youtube.com. https://www.youtube.com/watch?v=CYlNJpltjMMouTube. 
+ */
+*{
+    font-family : 'Poppins', sans-serif;
+
+}
+body{
+    background: linear-gradient(45deg, #121f12,#375245);
+    
+}
+#form{
+    width : 600px;
+    height : 50%;
+    margin : 15vh auto 0 auto;
+    padding : 20px;
+    background-color: whitesmoke;
+    border-radius : 4px;
+    font-size : 12px;
+ }
+ 
+#form h1{
+    color : #051305;
+    text-align : center;
+}
+
+#form button{
+    padding : 10px;
+    margin-top : 10px;
+    margin-left: 150px;
+    width : 50%;
+    color : white;
+    background-color: rgb(7, 24, 4);
+    border : none;
+    border-radius : 4px;
+}
+.input-control{
+    
+    font-size : 16px;
+    display : flex;
+    flex-direction: column;
+    padding : 20px 0 20px 80px;
+}
+
+.input-control input{
+    border : 2px solid #d0d8d2;
+    border-radius : 4px;
+    display : block;
+    padding : 10px;
+    width : 75%;
+}
+.input-control input:focus{
+    outline : 0;
+}
+.input-control.success input{
+    border-color :rgb(7, 24, 4);
+}
+.input-control.error input{
+    border-color :rgb(66, 3, 3);
+}
+.input-control .error{
+    color :rgb(66, 3, 3);
+    font-size : 16px;
+    height : 13px;
+}
+.container .login{
+    font-size : 14.5px;
+   text-align : center;
+    margin : 60px 40px 15px;
+    color :  black;
+}
+.login p a{
+    color : black;
+    text-decoration: none;
+    font-size : 16px;
+    font-weight: 600;
+}
+
+.login p a:hover{
+    text-decoration: underline;
+}

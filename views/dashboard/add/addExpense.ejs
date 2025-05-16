@@ -1,0 +1,36 @@
+<!-- 
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: addExpense.ejs
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the addExpense.ejs file is to display
+ * execute appropriate logic in accordance with passed locals to 
+ * add an expense transaction object.
+-->
+<div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1><%= info.name%></h1>
+    <div class="btn-toolbar mb-2 mb-md 0">
+        <div class="btn-group me-2">
+            <a href="/addIncome" class = "btn btn-sm btn-outline-secondary">
+                Add Income
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="col py-3">
+    <div class="row">
+        <div class="col">
+        </div>
+        <div class="col text-end fw-lighter">
+            <b>Transaction ID</b>
+        </div>
+        
+
+        <form action = "/addExpense" method = "POST">
+            <%- include('./addForm.ejs') %>
+        </form>
+         
+    </div>
+</div>

@@ -1,0 +1,36 @@
+<!-- 
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: addBudget.ejs
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the addBudget.ejs file is to display
+ * execute appropriate logic in accordance with passed locals to 
+ * add a budget object.
+-->
+<div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1><%= info.name%></h1>
+    <div class="btn-toolbar mb-2 mb-md 0" >
+        <div class="btn-group me-2 " style ="font-size: 30px;">
+            <!-- <a href="/addExpense" class = "btn btn-sm btn-outline-secondary">
+                <%= info.name%>
+            </a>  -->
+        </div>
+    </div>
+</div>
+
+<div class="col py-3">
+    <div class="row">
+        <div class="col">
+        </div>
+        <div class="col text-end fw-lighter">
+            <b><%= info.page %> ID</b>
+        </div>
+        
+
+        <form action = "/addBudget" method = "POST" style = "padding-left: 50px;">
+            <%- include('./addForm.ejs', info) %>
+        </form>
+         
+    </div>
+</div>

@@ -1,0 +1,141 @@
+ <!-- 
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: editForm.ejs
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the editForm.ejs file is to display
+ * execute appropriate logic in accordance with passed locals to 
+ * edit parameterized element attributes.
+-->
+<head>  
+    <title>Bootstrap date and time</title>  
+    <script src ="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>  
+    
+    <script src ="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script> 
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js" integrity="sha512-42PE0rd+wZ2hNXftlM78BSehIGzezNeQuzihiBCvUEB3CVxHvsShF86wBWwQORNxNINlBPuq7rG4WWhNiTVHFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <script src ="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/js/bootstrap-datetimepicker.min.js"></script>  
+    
+    <link rel ="stylesheet" href ="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">  
+    <link rel ="stylesheet" href ="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/css/bootstrap-datetimepicker.min.css">  
+    
+    </head>  
+    <body>  
+    <% var element = locals.element; var info = locals.info%>
+    <div class="row form-group mb-4" style = "width : 700px; padding-top: 20px; padding-left: 40px;">
+    
+        <% if (info.page == "Budget" || info.page == "Goal") { %>
+            <div class="col" >
+                <label for = "name"> <%= info.page %> Name</label>
+                <input type = "text" class = "form-control" id = "name" name = "name" value = "" placeholder = "<%= element.name %>">
+           </div>    
+        <% } %>
+        <% if (info.page == "Goal") { %>
+            <div class="col">
+                <label for = "saved"> Saved Amount</label>
+                <input type = "text" class = "form-control" id = "saved" name = "saved" value = "" placeholder = "<%= element.savedAmount %>">
+                <div class = "error" style = "color : red;"><%=info.error %></div>
+            </div>
+        </div>
+        <% } else { %>         
+            <div class="col">
+                <label for = "amount"> Amount</label>
+                <input type = "text" class = "form-control" id = "amount" name = "amount" value = "" placeholder = "<%= element.amount %>">
+                <div class = "error" style = "color : red;"><%=info.error %></div>
+            </div>
+            <%if(info.page == 'Transaction') {%>
+            <div class="col">
+                <label for = "type">Type</label>
+                <select name = "type" id = type class = "form-control">
+                    <% if (element.type == 0) { %>                     
+                        <option value = "">Expense</option>
+                    <% } else { %>                                  
+                        <option value = "">Income</option>
+                    <% } %>
+                    <option value = 0> Expense</option>
+                    <option value = 1> Income</option>
+                </select>
+            </div>
+        <% }} %>
+    
+        <% if (info.page == "Transaction" || info.page == 'Goal') { %>
+           
+                <% if (info.page == "Transaction") { %> 
+                    <div class = "col">         
+                        <label for = "date">Date</label>
+                        <div class="input-group date" id='date'>
+                            <input type='text'class="form-control" id = "date" name = "date" placeholder="<%= element.date %>"/>
+                            <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>	                 
+                            </span>
+                        </div>
+                    </div>
+                </div>
+               
+                <% } else if (info.page == "Goal") { %>
+                    
+                    <div class="row form-group mb-4" style = "width : 700px;  padding-left:40px;">
+                        <div class="col">
+                            <label for = "target"> Target Amount</label>
+                            <input type = "text" class = "form-control" id = "target" name = "target" value = "" placeholder = "<%= element.targetAmount%>">
+                            <div class = "error" style = "color : red;"><%=info.error %></div>
+                        </div>
+                        <div class = "col">
+                        <label for = "date">Save To Date</label>
+                            <div class="input-group date" id='date'>
+                                <input type='text'class="form-control" id = "date" name = "date" placeholder="<%= element.savedToDate%>"/>
+                                <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>	                 
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+        <% } %>
+    </div>
+    
+    <div class="row form-group mb-4" style = "width : 700px; padding-left: 30px;">
+        <div class="col">
+            <label for = "category">Category</label>
+            <select name = "category" id = category class = "form-control">
+                <option value = ""><%=element.category %></option>
+                <option value = 0> All</option>
+                <option value = 1> Transportation</option>
+                <option value = 2> Housing</option>
+                <option value = 3> Vehicle</option>
+                <option value = 4> Life & Entertainment</option>
+                <option value = 5> Utilities</option>
+                <option value = 6> Food & Drinks</option>
+                <option value = 7> Physical Upkeep</option>
+                <option value = 8> Medical & Healthcare</option>
+                <option value = 9> Personal</option>
+                <option value = 10> Pets</option>
+                <option value = 11> Professional Development</option>
+                <option value = 12> Income</option>
+                <option value = 13> Investments</option>
+            </select>
+        </div>
+    
+        <div class = "col form-group mb-4" style = "width : 700px; padding-left: 40px;">
+            <label for="description">Description</label><br>
+            <textarea class = "form-control" name="description" id="description" cols ="40" rows = "5" placeholder = "<%= element.description %>"></textarea>
+        </div>
+    </div>
+    <div class = "form-group mb-4" style = "width : 700px; padding-left : 30px;">
+        <button type="submit" class = "btn btn-primary">Edit <%=info.page %></button>
+     
+    <form action = "/deleteTransaction/<%=element._id%>?_method=DELETE" method="POST" class = "position-relative" >
+        <button type = "submit" class = "btn btn-danger btn-small" style = "padding-left: 20px;">Delete <%=info.page %></button>
+    </form>
+    </div>
+   
+    <script type="text/javascript">
+        $(function () {
+           var date = $('#date').datetimepicker({})
+           //console.log(date);
+        });
+     </script>
+    </body>
+    

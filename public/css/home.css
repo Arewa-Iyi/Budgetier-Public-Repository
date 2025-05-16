@@ -1,0 +1,103 @@
+/**
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: home.css
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the home.css file is 
+ * format the layout for the home.ejs webpage
+ * Reference : GreatStack. (2022, June 9). 
+ *             How To Make Animated Website Design Using HTML And CSS Step By Step. 
+ *             www.youtube.com. https://www.youtube.com/watch?v=yU_JgeAIRko&list=PLjwm_8O3suyOwElnplQ3quKEHsOuHyP9R
+ */
+*{
+    margin : 0;
+    padding : 0;
+    box-sizing : border-box;
+    font-family: 'Poppins', sans-serif;
+}
+.hero{
+    width : 100%;
+    min-height: 100vh;
+    background-image : url(./img/homepage_back.png);
+    background-position : center;
+    background-size : cover;
+    padding : 5px 10%;
+    overflow : hidden;
+}
+nav{
+    padding: 2px 0;
+    display : flex;
+    align-items : center;
+    justify-content : space-between;
+    font-size: 20px;
+}
+.icon{
+    margin-top : 30px;
+    width: 300px;
+    border-radius : 50px;
+}
+nav ul li{
+    display : inline-block;
+    list-style : none;
+    margin : 10px 15px;
+}
+
+nav ul li a{
+    text-decoration: none;
+    color : rgb(25, 68, 34);
+    font-weight : 400;
+}
+.signup-btn{
+    text-decoration : none;
+    color : rgb(25, 68, 34);
+    margin-right : 15px;
+    font-weight : 400;
+}
+.btn{
+    display : inline-block;
+    text-decoration: none;  
+    padding : 14px 40px;
+    color : #fff;
+    background-image: linear-gradient(45deg, #121f12,#375245);
+    font-size : 20px;
+    border-radius : 30px;
+    border-top-right-radius: 0;
+    transition : 0.5s;
+}
+.content{
+    margin-top : 10%;
+    font-size: 50px;
+}
+.content h1{
+    color :rgb(18, 43, 24);
+    font-size: 80px;
+
+}
+.content p{
+    margin : 10px 0 30px;
+    font-size: 30px;
+    color : rgb(7, 19, 10);
+    animation-delay : 1.0s;
+}
+.content .btn{
+    padding : 15px 80px;
+    font-size : 24px;
+    animation-delay : 2.3s
+}
+.btn:hover{
+    border-top-right-radius: 30px;
+}
+
+.anim{
+    opacity: 0;
+    transform : translateX(-50px);
+    animation: moveright 0.9s linear forwards;
+
+}
+@keyframes moveright{
+    100%{
+        opacity : 1;
+        transform: translateX(0px);
+    }
+}

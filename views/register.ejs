@@ -1,0 +1,78 @@
+ <!-- 
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: register.ejs
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the register.ejs file is to display 
+ * the registration webpage and execute appropriate logic to register user.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content = "IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budgetier Registration</title>
+    <link rel = "preconnect" href = "https://fonts.googleapis.com">
+    <link rel = "preconnect" href = "https://fonts.gstatic.com" crossorigin>
+    <link href = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel = "stylesheet">
+    <link href = '/register.css' rel = "stylesheet">
+    <script type = "module" defer src = "/register.js"></script>
+    <script type = "module" src = "/validate.js"></script>
+    <script type = "module" src = "/user.js"></script>
+    </head>
+<body>
+    <div class = "container">
+        <form id = "form" method = "post" action = "/register">
+            <h1 id = "registration">Registration</h1>
+            <div class="input-control">
+                <input id = "firstname" name = "firstname" type = "text"
+                placeholder="First Name" required>
+                <div class = "error">
+                <div id = "firsterror" >
+                    <%=firsterror%>
+                </div></div>
+            </div>
+            <div class="input-control">
+                <input id = "lastname" name = "lastname" type = "text"
+                placeholder="Last Name" required>
+                <div class = "error">
+                <span id = "lasterror">
+                    <%=lasterror%>
+                </span></div>
+            </div>
+            <div class="input-control">
+                <input id = "email" name = "email" type = "text"
+                placeholder = "Email" required>
+                <div class = "error">
+                <span id = "emailerror">
+                    <%=emailerror%>
+                </span></div>
+            </div>
+            <div class="input-control">
+                <input id = "entry1" name = "entry1" type = "password"
+                placeholder = "Password" required>
+                <div class = "error">
+                <span id = "entry1error">
+                    <%=entry1error%>
+                </span></div>
+            </div>
+            <div class="input-control">
+                <input id = "entry2" name = "entry2" type = "password"
+                placeholder = "Confirm Password" required>
+                <div class = "error">
+                <span id = "entry2error">
+                    <%=entry2error%>
+                </span></div>
+            </div>
+            
+                <button type = "submit">Register</button>
+            
+            <div class = "login">
+                <p>Already have an account? <a href = "/login">Log In</a></p>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

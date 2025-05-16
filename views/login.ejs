@@ -1,0 +1,47 @@
+ <!-- 
+ * Name : Arewa (Morountudun) Ojelade
+ * Date : 3/4/2025
+ * File Name: login.ejs
+ * Course : CMSC 495 Capstone in Computer Science
+ * Project : Budgetier Capstone Project
+ * Description : The purpose of the login.ejs file is to display 
+ * the login webpage and execute appropriate logic to login user
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
+    <link href="/login.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <title>Budgetier Login</title>
+  </head>
+
+  <body>
+    <div class = "wrapper">
+        <form id = "form" method = "post" action = "/login">
+            <h1>Login</h1>
+            <div class="input-box">
+                <input id = "email" name = "email" type="text" 
+                placeholder ="Email" required>
+                <i class='bx bxs-envelope' ></i>                
+                <div class = "error"><span id = "emailerror">
+                  <%=emailerror%>
+                </span></div>
+            </div>
+            <div class="input-box">
+                <input id = "entry" name = "entry" type="password" 
+                placeholder = "Password" required>
+                <i class='bx bxs-lock-alt'></i>
+                <div class = "error"><span id = "entryerror">
+                  <%=entryerror%>
+              </span></div>
+            </div>
+            <button type = "submit" class = "btn">Login</button>
+            <div class = "register-link">
+                <p>Don't have an account? <a href = "/register">Register</a></p>
+            </div>
+        </form>
+    </div>
+  </body>
+</html>
