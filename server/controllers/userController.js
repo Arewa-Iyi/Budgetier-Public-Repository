@@ -574,32 +574,32 @@ exports.searchDisplay = async(req, res) =>{
          budgets: await getBudgetList(userID,1,3),
          goals : await getGoalList(userID,1,3)
       }
-      // req.session.user.messages = [];
-      // res.render('main', locals);
-      // let perPage = 3;
-      // let t_page = req.query.t_page || 1;
-      // let b_page = req.query.b_page || 1;
-      // let g_page = req.query.g_page || 1;
-      // const locals = {
-      //    title : 'Search User Query',
-      //    description : 'Budgetier Search User Query',
-      //    file : './dashboard/search.ejs', 
-      //    messages : [],
-      //    board : "search",
-      //    info : {
-      //       name : 'Search User Query',          
-      //       page : 'search',
-      //    },
-      //    user : user,
-      //    transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
-      //    budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
-      //    goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
-      //    t_page,
-      //    b_page,
-      //    g_page,
-      //    t_pages : Math.ceil(transactionList.length/perPage),
-      //    b_pages : Math.ceil(budgetList.length/perPage),
-      //    g_pages : Math.ceil(goalList.length/perPage)
+      req.session.user.messages = [];
+      res.render('main', locals);
+      let perPage = 3;
+      let t_page = req.query.t_page || 1;
+      let b_page = req.query.b_page || 1;
+      let g_page = req.query.g_page || 1;
+      const locals = {
+         title : 'Search User Query',
+         description : 'Budgetier Search User Query',
+         file : './dashboard/search.ejs', 
+         messages : [],
+         board : "search",
+         info : {
+            name : 'Search User Query',          
+            page : 'search',
+         },
+         user : await findUser(userID),
+         transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
+         budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
+         goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
+         t_page,
+         b_page,
+         g_page,
+         t_pages : Math.ceil(transactionList.length/perPage),
+         b_pages : Math.ceil(budgetList.length/perPage),
+         g_pages : Math.ceil(goalList.length/perPage)
 
       
       res.render('main', locals)
