@@ -556,9 +556,9 @@ exports.searchDisplay = async(req, res) =>{
 
       const userID = req.session.user.userID;
       
-      //const transactionList = req.session.user.t_search_display;
-      //const budgetList = req.session.user.b_search_display;
-      //const goalList = req.session.user.g_search_display;
+      const transactionList = req.session.user.t_search_display;
+      const budgetList = req.session.user.b_search_display;
+      const goalList = req.session.user.g_search_display;
 
       const user = await findUser(userID);
      
