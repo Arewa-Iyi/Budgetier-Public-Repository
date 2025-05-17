@@ -11,7 +11,13 @@
  * Accounts database. When a query is requested, a semantic vector is created
  * and a Vector search is conducted to aggregate matching documents.
  * The aggregated documents and saved to seperate json files for each collection.
- * collection i
+ * Reference
+ * freeCodeCamp.org. (2023, December 11). 
+ *    Vector Search RAG Tutorial – Combine Your Data with LLMs with Advanced Search.
+ *    YouTube. https://www.youtube.com/watch?v=JEBDfGqrAUA&list=PL6GWKX4_k1y0u3ib3vlhn6qcrCvsC5ofN&index=2
+ *
+ * MongoDB. (2024, August 15). Building a RAG Pipeline in JavaScript with Memory. 
+ *    YouTube. https://www.youtube.com/watch?v=EcZMe8yOcs8&list=PL6GWKX4_k1y0u3ib3vlhn6qcrCvsC5ofN
 '''
 import pymongo
 import requests
