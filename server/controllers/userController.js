@@ -496,7 +496,7 @@ exports.search = async(req, res) => {
             budgets      = await searchBudget(userID,el,path)
             goals        = await searchGoal(userID,el,path)      
          }
-         console.log("Before forEach Loop ", transactions,budgets,gols)
+         console.log("Before forEach Loop ", transactions,budgets,goals)
          transactions.forEach(async el =>{
             transactionList.push(el);
          })
@@ -507,7 +507,7 @@ exports.search = async(req, res) => {
             goalList.push(el);
          })
          
-         console.log("After forEach Loop ", transactionList, budgetList, golList)
+         console.log("After forEach Loop ", transactionList, budgetList, goalList)
       })
       console.log("query : ", transactionList,budgetList,goalList)
       if(!transactionList & !budgetList & !goalList){
