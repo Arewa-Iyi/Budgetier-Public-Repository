@@ -488,7 +488,7 @@ exports.search = async(req, res) => {
          else if ((/[0-9a-fA-F]{24}/.test(el))){
             path = 1
          }
-         else if(!isNaN(Date.parse(search))){
+         else if(!isNaN(Date.parse(el))){
             path = 2
          }
          else {      
