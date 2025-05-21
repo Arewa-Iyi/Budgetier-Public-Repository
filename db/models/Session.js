@@ -31,4 +31,4 @@ const sessionSchema = new Schema({
   version: {type: SchemaTypes.Int32, default: 3},
 }, { collection: 'Session', timestamps: true });
 const User = model('Session', sessionSchema);
-module.exports = User;
+module.exports = Session;
