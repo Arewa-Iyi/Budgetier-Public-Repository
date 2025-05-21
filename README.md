@@ -9,3 +9,4 @@ The application was built with the express build tool, written in javascript, ej
 ### Future Improvements :
 Since my capstone presentation, I have implemented priority one of my stated future improvements, the search feature.
 A RAG pipeline using HuggingFace's Sentence Transformers to embed vectorized attributes of the name, categories, and descriptions of each document in each collection. When a user requests a search, the retrieval mechanism generates an embedding of the query and a vector search is conducted to aggregate the documents most similar to the query. 
+                         May 21st 2025 Updates : Restructed session handling from express-session to internal database structure to fix unexpected session end durring search. Merged RagSearch with RegExSearch
