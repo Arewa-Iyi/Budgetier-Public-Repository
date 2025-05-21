@@ -11,20 +11,27 @@
 const {addTransaction, getTransaction, getTransactionList,
       updateTransaction, removeTransaction} = require('../../db/transaction.js');
 const { findUser } = require('../../db/user.js');
-
+const {findSession, logActivity, updateMessages} = require('../../db/session.js');
+const os = require('os');
+const hostname = os.hostname();
 // Display the addIncome page.
 exports.addIncome = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Add Income Transaction',
          description : 'Budgetier Add Income Transaction Form',
          file : './dashboard/add/addIncome.ejs',      
          board : "transaction",
-         user : await findUser(userID),
+         user,
          info : {
             name : 'Add Income',
             page : 'Transaction'
@@ -32,17 +39,24 @@ exports.addIncome = async(req, res)=>{
       }
       res.render('main', locals)
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Income Transaction not added.`]);
+      res.redirect('/transactions');
    }
 }
 
 // Handle post request to add income transaction object 
 exports.addIncomePost = async(req, res)=>{
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Add Income Transaction',
          description : 'Budgetier Add Income Transaction',
@@ -54,6 +68,7 @@ exports.addIncomePost = async(req, res)=>{
             page : 'Transaction',
             error : "",
          },
+         user
          
       }
       const {amount, date, category, description} = req.body;
@@ -66,7 +81,7 @@ exports.addIncomePost = async(req, res)=>{
          const result = await addTransaction(userID, amount, 1, category,
                                           description, date);
                                           console.log(result);
-         locals.user = await findUser(userID);
+         
          if(result){
          locals.messages = ["Income Transaction added."];
          }  else{
@@ -76,22 +91,27 @@ exports.addIncomePost = async(req, res)=>{
          locals.file = './dashboard/transaction.ejs'
          
       }
-      locals.user = await findUser(userID);
       locals.transactions = await getTransactionList(userID,1,10);
       res.render('main', locals);
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Income Transaction not added.`]);
+      res.redirect('/transactions');
    }
 }
 
 // Display the addExpense page.
 exports.addExpense = async(req, res)=>{
-   
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Add Expense Transaction',
          description : 'Budgetier Add Expense Transaction Form',
@@ -101,22 +121,28 @@ exports.addExpense = async(req, res)=>{
             name : 'Add Expense',          
             page : 'Transaction'
          },
-         
+         user
       }
-      locals.user = await findUser(userID);
       res.render('main', locals);
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Expense Transaction not added.`]);
+      res.redirect('/transactions');
    }
 }
 
 // Handle post request to add an expense transaction object
 exports.addExpensePost = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Add Expense Transaction',
          description : 'Budgetier Add Expense Transaction Form',
@@ -128,7 +154,7 @@ exports.addExpensePost = async(req, res)=>{
             page : 'Transaction',
             error : "",
          },
-         
+         user
       }
       const {amount, date, category, description} = req.body;
       console.log(req.body)
@@ -148,64 +174,81 @@ exports.addExpensePost = async(req, res)=>{
          }                              
          locals.file = './dashboard/transaction.ejs'
          
-      }
-      locals.user = await findUser(userID);    
+      }    
       locals.transactions = await getTransactionList(userID,1,10);
       res.render('main', locals);
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Expense Transaction not added.`]);
+      res.redirect('/transactions');
    }
 }
 
 // Display the viewTransaction page populated with passed param.id object.
 exports.viewTransaction = async(req, res) => {
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const userID = req.session.user.userID;
-   console.log(req.params.id);
-   if(req.params.id){
-      try{
-         const user = await findUser(userID);
-         const transaction = await getTransaction(userID,req.params.id);
+   try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      const transactionID = req.params.id;
+      const transaction = await getTransaction(userID,transactionID);
+      if(transaction){
          const locals = {
             title : 'View Transaction',
             description : 'Budgetier View Transaction',
             file : './dashboard/view/viewTransaction.ejs',
             messages : "",
             board : "transaction",
-            user : user,
+            user,
             info : {
                name : 'View Transaction',          
                page : 'Transaction',
                error : "",
             },
             transaction : transaction,
-            
+         
          }
          res.render('main', locals);
-      }catch(error){
-         console.log(error);
       }
+      else{
+         await updateMessages(hostname, [`Operation failed. Transaction ${transactionID} not found.`]);
+         res.redirect('/transactions')
+      }
+   }catch(error){ 
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Transaction not found.`]);
+      res.redirect('/transactions');
    }
+   
 }
 
 // Display editTransaction page populated with passed params.id object
 exports.editTransaction = async(req, res) => {
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
-      if(req.params.id){
-         const transaction = await getTransaction(userID,req.params.id);
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      const transactionID = req.params.id;
+      const transaction = await getTransaction(userID,transactionID);
+      await logActivity(hostname);
+      if(transaction){
          const locals = {
             title : 'Edit Transaction',
             description : 'Budgetier Edit Transaction',
             file : './dashboard/edit/editTransaction.ejs',
             messages : "",
             board : "transaction",
-            user : await findUser(userID),
+            user,
             info : {
                name : `Edit Transaction`,          
                page : 'Transaction',
@@ -215,18 +258,29 @@ exports.editTransaction = async(req, res) => {
          }
          res.render('main', locals);
       }
-   }catch(error){
-      console.log(error);
+      else{
+         await updateMessages(hostname, [`Operation failed. Transaction ${transactionID} not found.`]);
+         res.redirect('/transactions')
+      }
+   }catch(error){ 
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Transaction not updated.`]);
+      res.redirect('/transactions');
    }
 }
 
 // Handle post request to edit passed params.id object
 exports.editTransactionPost = async(req, res) =>{
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   try{
-      const userID = req.session.user.userID;
+      try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const transactionID = req.params.id || locals.transactionID;
       const transaction = await getTransaction(userID, transactionID);
       const locals = {
@@ -241,18 +295,15 @@ exports.editTransactionPost = async(req, res) =>{
             error : "",
          },
          params : transactionID,
+         user
       }
       
-      if(!transaction){            
-         locals.file = './dashboard/transaction.ejs'
-         locals.messages = ["Transaction not found."];
-      }
-      else{         
+      if (transaction){         
          var {amount, type, date, category, description} = req.body; 
          if(amount && !(/^\d*(\.\d+)?([eE]\d+)?$/.test(amount))){           
             locals.info.error = "Please enter a positive number."
          }          
-         else{
+         else {
             amount = amount ? amount : transaction.amount;
             type = type ? type : transaction.type;
             date = date ? new Date(date) : transaction.date;
@@ -265,49 +316,59 @@ exports.editTransactionPost = async(req, res) =>{
             if(result){
                locals.messages = [`Transaction ${transaction._id} updated.`];
             }else{
-               locals.messages = [`Operation failed. Transaction $${transaction._id} not removed.`];          
+               locals.messages = [`Operation failed. Transaction ${transaction._id} not updated.`];          
             }                                         
             locals.file = './dashboard/transaction.ejs'        
          }
+         locals.transactions = await getTransactionList(userID,1,10); 
+         res.render('main', locals);   
       } 
-      
-   locals.user = await findUser(userID) 
-   locals.transactions = await getTransactionList(userID,1,10); 
-   res.render('main', locals);   
-   }catch(error){
-      console.log(error);
+      else{
+         await updateMessages(hostname, [`Operation failed. Transaction ${transactionID} not found.`]);
+         res.redirect('/transactions')
+      }
+  
+   }catch(error){ 
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Transaction not updated.`]);
+      res.redirect('/transactions');
    }
 }
 
 // Handle post request to delete passed params.id object
 exports.deleteTransaction = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
-      const transactionID = req.params.id;   
-       
-      const locals = {
-         title : 'Transactions Dashboard',
-         description : 'Free NodeJS User Management Syestem',
-         file : './dashboard/transaction.ejs',
-         messages : [],      
-         board : "transaction",         
-         
-      }
+      var session = await findSession(hostname);
 
-      const transaction = await removeTransaction(userID, transactionID);
-      if(!transaction){
-         locals.messages = [`Operation failed. Transaction ${transaction._id} not removed.`];
-      }else{
-         locals.messages = [`Transaction ${transaction._id} removed.`];
+      if(!(session.authenticated)){
+         res.redirect('/login');
       }
-      
-      locals.user = await findUser(userID);
-      locals.transactions = await getTransactionList(userID,1,10); 
-      res.render('main',locals);
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);   
+
+      const transactionID = req.params.id;    
+      const transaction = await removeTransaction(userID, transactionID);
+      if(transaction){
+         const locals = {
+            title : 'Transactions Dashboard',
+            description : 'Free NodeJS User Management Syestem',
+            file : './dashboard/transaction.ejs',
+            messages :  [`Transaction ${transaction._id} removed.`],      
+            board : "transaction",         
+            user, 
+            transactions : await getTransactionList(userID,1,10)
+         }
+         res.render('main',locals);
+      }
+      else{
+         await updateMessages(hostname, [`Operation failed. Transaction ${transactionID} not found.`]);
+         res.redirect('/transactions')
+      }
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Transaction not removed.`]);
+      res.redirect('/transactions');
    }
 }

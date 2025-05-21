@@ -23,6 +23,7 @@ const uri = process.env.URI;
         console.log(error)
         console.log("Database cannot be connected.");
     })
+    
 }
 
 module.exports = connectDB;

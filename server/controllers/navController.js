@@ -10,7 +10,9 @@
  */
 const {validateInputs} = require('../../public/js/validate.js');
 const {loginUser, getUser, addUser} = require('../../db/user.js');
-
+const {createSession, endSession} = require('../../db/session.js')
+const os = require('os');
+const hostname = os.hostname();
 // Display home page
 exports.home = async(req,res) =>{
     res.render("home.ejs");
@@ -43,18 +45,9 @@ exports.loginPost = async(req, res)=>{
     // Validate user login credentials 
     const user = await loginUser(email, entry);
      if(user){
-        // Store user information in store
-        req.session.user = {
-            userID : user._id,
-            firstname : user.firstName,
-            email : user.email,
-            messages : [],
-            t_search_display : [],
-            b_search_display : [],
-            g_search_display : [],
-        }
-        // authenticate user session
-        req.session.athenticated = true;   
+        
+        // create and authenticate user session
+        await createSession(user._id, hostname, true);
         res.redirect('/dashboard');
     }
     else{
@@ -77,8 +70,7 @@ exports.loginPost = async(req, res)=>{
 
 // Logout user and clear session
 exports.logout = async(req, res) =>{
-    req.session.user = {};
-    req.session.athenticated = false;
+    await endSession(hostname);
     res.redirect('/');
 }
 

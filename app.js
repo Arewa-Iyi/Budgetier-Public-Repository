@@ -10,8 +10,8 @@
  */
 
 const express = require('express');
-const session = require('express-session');
-const store = new session.MemoryStore();
+//const session = require('express-session');
+//const store = new session.MemoryStore();
 const app = express();
 
 const flash = require('connect-flash');
@@ -30,16 +30,30 @@ app.use(express.static('views'));
 // add static path to views folder
 app.use(express.static('db')); 
 
-const connectDB = require('./public/js/configure.js'); connectDB();
+const connectDB = require('./public/js/configure.js');  connectDB();
 
+//console.log(connection)
+// connection.on('disconnected', (req, res) =>{
+//     app.close(()=> {
+//         console.log("Database Disconnected. Application closing...");
+//     });
+//     process.exit(0);
+// })
+// connection.on('error', (req, res) =>{
+//     app.close(()=> {
+//         console.log("Connection Error. Application closing...");
+//     });
+//     process.exit(0);
+// })
 require('dotenv').config();
-app.use(session({
-    secret : process.env.SESSION_KEY,
-    cookie : {maxAge : 3600000}, // 1 hour
-    resave : true,
-    saveUninitialized : false,
-    store : store
-}));
+      
+// app.use(session({
+//     secret : process.env.SESSION_KEY,
+//     cookie : {maxAge : 3600000}, // 1 hour
+//     resave : false,
+//     saveUninitialized : false,
+//     store : store
+// }));
 
 app.use(flash());
 
@@ -84,3 +98,5 @@ const port = 5000;
 app.listen(port, () =>{
     console.log(`Server running on Port : ${port}`);
 });
+
+module.exports = {app}

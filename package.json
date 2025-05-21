@@ -1,6 +1,6 @@
 {
   "name": "budgetier",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -15,6 +15,7 @@
     "bootstrap-icons": "^1.13.1",
     "budgetier": "file:",
     "connect-flash": "^0.1.1",
+    "connect-redis": "^8.1.0",
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
     "export-to-csv": "^1.4.0",
@@ -22,8 +23,10 @@
     "express-ejs-layouts": "^2.5.1",
     "express-flash-message": "^3.0.2",
     "express-session": "^1.18.1",
+    "ioredis": "^5.6.1",
     "method-override": "^3.0.0",
-    "mongoose": "^8.14.2"
+    "mongoose": "^8.15.0",
+    "redis": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

@@ -15,86 +15,112 @@ const {loginUser,findUser,getUser, updateUser, updateEntry} = require('../../db/
 const {validateEmail, validateEntry} = require('../../public/js/validate.js');
 const {mkConfig, generateCsv, download} = require('export-to-csv');
 const {spawn} = require('child_process');
-const Budget = require('../../db/models/Budget.js');
-const { lessThan } = require('three/tsl');
-
+const {findSession, logActivity, updateMessages, 
+       saveSearchResults, clearSearch} = require('../../db/session.js');
+const fs = require('fs'); 
+const os = require('os');
+const hostname = os.hostname();
 // Display user main dashboard
 exports.dashboard = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const month = ["January","February","March","April","May","June",
-      "July","August","September","October","November","December"];
-   const date =  new Date(Date.now());
-   var tMonth = month[date.getMonth()];
-   var tYear = date.getFullYear();
-   const csvConfig = mkConfig({useKeysAsHeaders : true});
-   const exportFile = `${tMonth}_${tYear}_transactions.csv`;
-   console.log(exportFile);
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
       const user = await findUser(userID);
+      await logActivity(hostname);
+      const month = ["January","February","March","April","May","June",
+         "July","August","September","October","November","December"];
+      const date =  new Date(Date.now());
+      var tMonth = month[date.getMonth()];
+      var tYear = date.getFullYear();
+      const csvConfig = mkConfig({useKeysAsHeaders : true});
+      const exportFile = `${tMonth}_${tYear}_transactions.csv`;
+      console.log(exportFile);
+      var transactions = await exportTransctionList(userID);
+      if(!transactions){
+         transactions = [{
+            firstName : user.firstName,
+            lastName : user.lastName,
+            userID,
+            Transactions : "None"
+         }]
+      }
       const locals = {
          title : 'Main Dashboard',
          description : 'Free NodeJS User Management Syestem',
          file : './dashboard/dashboard.ejs',
-         messages : req.session.user.messages,
+         messages : (session.messages).slice(),
          board : "dashboard",
          user : user,
          exportFile,
-         export : await generateCsv(csvConfig)(await exportTransctionList(userID)),
+         export : await generateCsv(csvConfig)(transactions),
          transactions : await getTransactionList(userID,1,3),
          budgets : await getBudgetList(userID,1,3),
          goals : await getGoalList(userID,1,3)
       }
-      req.session.user.messages = [];
+      await updateMessages(hostname, []);
       res.render('main', locals);
    }catch(error){
       console.log(error);
+      res.redirect('/404');
    }
 }
 
 // Display user transaction dashboard
 exports.transactions = async(req, res)=>{
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const userID = req.session.user.userID;
-   const locals = {
-      title : 'Transactions Dashboard',
-      description : 'Free NodeJS User Management Syestem',
-      file : './dashboard/transaction.ejs',
-      transactions : [],
-      messages : [],      
-      board : "transaction"
-   }
-   let perPage = 10;
-   let page = req.query.page || 1;
-   console.log(req.query.page);
-   try{
-      
+    try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
       const user = await findUser(userID);
+      await logActivity(hostname);
+
+      let perPage = 10;
+      let page = req.query.page || 1;
+      console.log(req.query.page);
       const total = await getTransactionList(userID); 
       const result = await getTransactionList(userID,page,perPage); 
-      if(result){
-         locals.user = user;
-         locals.transactions = result;
-         locals.current = page;
-         locals.pages = Math.ceil(total.length/perPage);
-      }else{res.redirect('/404');}
+      const locals = {
+         title : 'Transactions Dashboard',
+         description : 'Free NodeJS User Management Syestem',
+         file : './dashboard/transaction.ejs',
+         board : "transaction",
+         user,
+         transactions : result,
+         messages : (session.messages).slice(),  
+         pages : Math.ceil(total.length/perPage)
+      }
+     
+      
+      await updateMessages(hostname, []);
+      res.render('main', locals);
    }catch(error){
       console.log(error);
+      await updateMessages(hostname, ["Error Encountered"]);
+      res.redirect('/dashboard');
    }
-   res.render('main', locals);
 }
 
 // Display user budget dashboard
 exports.budgets = async(req, res)=>{
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   try{
-      const userID =  req.session.user.userID;
+    try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Budgets Dashboard',
          description : 'Free NodeJS User Management Syestem',
@@ -114,60 +140,74 @@ exports.budgets = async(req, res)=>{
          locals.current = page;
          locals.pages = Math.ceil(total.length/perPage);
       }else{res.redirect('/404');}
+      
+      await updateMessages(hostname, []);
       res.render('main', locals);
    }catch(error){
       console.log(error);
+      await updateMessages(hostname, ["Error Encountered"]);
+      res.redirect('/dashboard');
    }
 }
 
 // Display user goal dashboard
 exports.goals = async(req, res)=>{
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   try{
-      const userID =  req.session.user.userID;
+    try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Goals Dashboard',
          description : 'Free NodeJS User Management Syestem',
          file : './dashboard/goal.ejs',
-         messages : [],      
+         messages : (session.messages).slice(),      
          board : "goal"
       }
       let perPage = 10;
       let page = req.query.page || 1;
       console.log(req.query.page);
-      
-         
-         const user = await findUser(userID);
-         const total = await getGoalList(userID); 
-         const result = await getGoalList(userID,page,perPage); 
-         if(result){
-            locals.user = user;
-            locals.goals = result;
-            locals.current = page;
-            locals.pages = Math.ceil(total.length/perPage);
-         }else{res.redirect('/404');}
+      const total = await getGoalList(userID); 
+      const result = await getGoalList(userID,page,perPage); 
+      if(result){
+         locals.user = user;
+         locals.goals = result;
+         locals.current = page;
+         locals.pages = Math.ceil(total.length/perPage);
+      }else{res.redirect('/404');}
+      await updateMessages(hostname, []);
       res.render('main', locals);
    }catch(error){
       console.log(error);
+      await updateMessages(hostname, ["Error Encountered"]);
+      res.redirect('/dashboard');
    }
 }
 
 // Display user profile dashboard
 exports.profile = async(req, res)=>{
-     if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-  const userID = req.session.user.userID;
-  try{
+    
+   try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
       const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Profile',
          description : 'Budgetier User Profile',
          file : './dashboard/profile.ejs',      
          board : "profile",
-         messages : [],
+         messages : session.messages.slice(),
          board : "profile",
          user : user,
       }
@@ -176,21 +216,23 @@ exports.profile = async(req, res)=>{
       }
       res.render('main', locals);
   }catch(error){
-      console.log(error);
+   console.log(error);
   }
 }
 
 // Display the editProfile page
 exports.editProfile = async(req, res) =>{ 
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }  
-   const userID = req.session.user.userID;
-   const user  = await findUser(userID);
-   if(!user){
-      res.redirect('/404');
-   }
    try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
+
       const locals = {
          title : 'Edit Profile',
          description : 'Budgetier Edit Profile',
@@ -214,15 +256,16 @@ exports.editProfile = async(req, res) =>{
 
 // Handle post request to edit profile
 exports.editProfilePost = async(req, res) =>{  
-     if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const userID = req.session.user.userID;
-   const user  = await findUser(userID);  
    try{
-      if(!user){
-         res.redirect('/404');
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
       }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       var{firstname,lastname,email,amount} = req.body; 
       const locals = {
             title : 'Edit Profile',
@@ -277,15 +320,16 @@ exports.editProfilePost = async(req, res) =>{
 }
 // Display the editEntry page
 exports.editEntry = async(req, res) =>{  
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   } 
-   const userID = req.session.user.userID;
-   const user  = await findUser(userID);
-   if(!user){
-      res.redirect('/404');
-   }
    try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);
       const locals = {
          title : 'Update User Entry',
          description : 'Budgetier Update User Entry',
@@ -304,21 +348,24 @@ exports.editEntry = async(req, res) =>{
 
    }catch(error){
       console.log(error);
+      await updateMessages(hostname, ["Error : Password not updated."]);
+      res.redirect('/dashboard');
    }
 }
 
 // Handle post request to edit user entry
 exports.editEntryPost = async(req, res) =>{  
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const userID = req.session.user.userID;
-   const user  = await findUser(userID);  
-   const email = req.session.user.email;
    try{
-      if(!user){
-         res.redirect('/404');
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
       }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      const email = user.email;
+      await logActivity(hostname);
       var{entry1,entry2,entry3} = req.body; 
       const locals = {
             title : 'Update User Entry',
@@ -360,124 +407,28 @@ exports.editEntryPost = async(req, res) =>{
       res.render('main', locals);
 
    }catch(error){
-      console.log(error);
+      await updateMessages(hostname, ["Error : Password not updated."]);
+      res.redirect('/dashboard');
    }
 }
 
-exports.ragSearch = async(req, res) => {
-   
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   try{
-      const userID = req.session.user.userID;
-      console.log("userID : ", userID)
-      var budgetList = [];
-      var transactionList = [];
-      var goalList = [];
-      var query = ""
-      let searchTerm = req.body.searchTerm;
-      let search  = searchTerm.split(" ")   
-      
-      search.forEach(async el =>{
-         if((/^\d*(\.\d+)?([eE]\d+)?$/.test(el))){
-            transactionList.concat(await searchTransaction(userID,el,0))
-            budgetList.concat(await searchBudget(userID,el,0))
-            goalList.concat(await searchGoal(userID,el,0))
-         }
-         else if ((/[0-9a-fA-F]{24}/.test(el))){
-            
-            transactionList.concat(await searchTransaction(userID,el,1))
-            budgetList.concat(await searchBudget(userID,el,1))
-            goalList.concat(await searchGoal(userID,el,1))
-         }
-         else if(!isNaN(Date.parse(search))){
-            //search = search.replace(/[^a-zA-Z0-9]/g,"")
-            transactionList.concat(await searchTransaction(userID,el,2))
-            budgetList.concat(await searchBudget(userID,el,2))
-            goalList.concat(await searchGoal(userID,el,2))
-         }
-         else {query = query + search + " "}
-      })
-      console.log("query : ", query)
-      if(!query){
-         req.session.user.messages = ["No Resulst Found."]
-         res.redirect('./dashboard')
-      }
-      const child_process = spawn('python', ['./server/controllers/rag.py', userID, query])
-      child_process.stdout.on('data', (data) =>{
-         console.log(`stdout : ${data}`);
-      });
-      child_process.stderr.on('data', (data) =>{
-         console.error(`stderr: ${data}`);
-
-      })
-      child_process.on('close', (code) =>{
-         
-         console.log(`child process exited with code ${code}`);
-      })
-      
-      const t_results = require('./results/t_results.json');
-      const b_results = require('./results/b_results.json');
-      const g_results = require('./results/g_results.json');
-
- 
-      transactionList = transactionList.concat([t_results]);
-      budgetList = budgetList.concat([b_results]);
-      goalList = goalList.concat([g_results]);
-      
-      req.session.user.t_search_display = transactionList;
-      req.session.user.b_search_display = budgetList;
-      req.session.user.g_search_display = goalList;
-   
-         let perPage = 3;
-         let t_page = req.query.t_page || 1;
-         let b_page = req.query.b_page || 1;
-         let g_page = req.query.g_page || 1;
-        const locals = {
-            title : 'Search User Query',
-            description : 'Budgetier Search User Query',
-            file : './dashboard/search.ejs',
-            messages : [],
-            board : "search",
-            info : {
-               name : `Search User Query`,          
-               page : 'search',
-            },
-            user : await findUser(userID),
-            transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
-            budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
-            goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
-            t_page,
-            b_page,
-            g_page,
-            t_pages : Math.ceil(transactionList.length/perPage),
-            b_pages : Math.ceil(budgetList.length/perPage),
-            g_pages : Math.ceil(goalList.length/perPage)
-
-      }
-      res.redirect("./searchDisplay")
-   }
-   catch(error){
-      console.log(error)
-   }
-      
-}
 exports.search = async(req, res) => {
-   
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
       const user = await findUser(userID);
-      let budgetList = [];
-      let transactionList = [];
-      let goalList = [];
+      await logActivity(hostname);
+      await clearSearch(hostname, userID);
       let searchTerm = req.body.searchTerm;
       let search  = searchTerm.split(" "); 
-      
+      let query = "";
       search.forEach(async el =>{
+
          let path = 3;
          let transactions;
          let budgets;
@@ -488,29 +439,145 @@ exports.search = async(req, res) => {
          else if ((/[0-9a-fA-F]{24}/.test(el))){
             path = 1
          }
-         else if(!isNaN(Date.parse(el))){
+         else if (!isNaN(Date.parse(el))){
             path = 2
          }
-         else {      
-            transactions = await searchTransaction(userID,el,path)
-            budgets      = await searchBudget(userID,el,path)
-            goals        = await searchGoal(userID,el,path)      
-         }
-         transactionList = [...transactionList, ...transactions];
-         budgetList = [...budgetList, ...budgets];         
-         goalList = [...goalList, ...goals];
+         else{query = query + search}
+         transactions = await searchTransaction(userID,el,path);
+         budgets      = await searchBudget(userID,el,path);
+         goals        = await searchGoal(userID,el,path);   
+
+         saveSearchResults(hostname, userID, transactions, budgets, goals, true);
       })
-      console.log("query : ", transactionList,budgetList,goalList)
-      if(!transactionList & !budgetList & !goalList){
-         req.session.user.messages = ["No Resulst Found."]
-         res.redirect('./dashboard')
-      }      
-     
+      if(query){
+         console.log("conducting Rag Search.")
+         const child_process = spawn('python', ['./server/controllers/rag.py', userID, query, hostname])
+         child_process.stdout.on('data', async (data) =>{
+            console.log(`Logging : ${data}`);
+
+         })
+         child_process.stderr.on('data', async (data) =>{
+            console.error(`stderr: ${data}`);
+
+         })
+         child_process.on('close', async(code) =>{
+            console.log(`child process exited with code ${code}`);
+
+            session = await findSession(hostname);
+      var transactionList = [...session.transactionList, ...session.transactionRag];
+      var budgetList = [...session.budgetList, ...session.budgetRag];
+      var goalList = [...session.goalList, ...session.goalRag];
+
+      console.log("back in user controller", transactionList)
+      if(!(transactionList || budgetList || goalList)){
+         await updateMessages(hostname, ["No Results Found."]);
+         res.redirect('/dashboard');
+       
+      }  
+  
+      let perPage = 3;
+      let t_page = req.query.t_page || 1;
+      let b_page = req.query.b_page || 1;
+      let g_page = req.query.g_page || 1;
+      const locals = {
+         title : 'Search User Query',
+         description : 'Budgetier Search User Query',
+         file : './dashboard/search.ejs',
+         messages : [],
+         board : "search",
+         info : {
+            name : `Search User Query`,          
+            page : 'search',
+         },
+         user,
+         transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
+         budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
+         goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
+         t_page,
+         b_page,
+         g_page,
+         t_pages : Math.ceil(transactionList.length/perPage),
+         b_pages : Math.ceil(budgetList.length/perPage),
+         g_pages : Math.ceil(goalList.length/perPage)
+         }
+      
+      
+        res.render('main', locals) }
+      )
+      }
+      else{
+      session = await findSession(hostname);
+      var transactionList = session.transactionList;
+      var budgetList = session.budgetList;
+      var goalList = session.goalList;
+
+      console.log("back in user controller", transactionList)
+      if(!(transactionList || budgetList || goalList)){
+         await updateMessages(hostname, ["No Results Found."]);
+         res.redirect('/dashboard');
+       
+      }  
+  
+      let perPage = 3;
+      let t_page = req.query.t_page || 1;
+      let b_page = req.query.b_page || 1;
+      let g_page = req.query.g_page || 1;
+      const locals = {
+         title : 'Search User Query',
+         description : 'Budgetier Search User Query',
+         file : './dashboard/search.ejs',
+         messages : [],
+         board : "search",
+         info : {
+            name : `Search User Query`,          
+            page : 'search',
+         },
+         user,
+         transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
+         budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
+         goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
+         t_page,
+         b_page,
+         g_page,
+         t_pages : Math.ceil(transactionList.length/perPage),
+         b_pages : Math.ceil(budgetList.length/perPage),
+         g_pages : Math.ceil(goalList.length/perPage)
+         
+
+      }
+      res.render('main', locals) }
+      
+      
+   }
+   catch(error){
+      console.log(error);
+      await updateMessages(hostname, ["Error : Search Not Found."]);
+      res.redirect('/dashboard');
+   }    
+}
+
+exports.searchDisplay = async(req, res) =>{
+   
+   var session = await findSession(hostname);
+   res.json("In SearchDisplay");
+   try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+      else{
+         const userID = session.userID;
+         const user = await findUser(userID);
+         await logActivity(hostname);
+         var transactionList = session.transactionList;
+         var budgetList = session.budgetList;
+         var goalList = session.goalList;
          let perPage = 3;
          let t_page = req.query.t_page || 1;
          let b_page = req.query.b_page || 1;
          let g_page = req.query.g_page || 1;
-        const locals = {
+         const locals = {
             title : 'Search User Query',
             description : 'Budgetier Search User Query',
             file : './dashboard/search.ejs',
@@ -531,57 +598,14 @@ exports.search = async(req, res) => {
             b_pages : Math.ceil(budgetList.length/perPage),
             g_pages : Math.ceil(goalList.length/perPage)
 
-         }
-      res.render("./main", locals)
-   }
-   catch(error){
-      console.log(error)
-   }
-      
-}
-exports.searchDisplay = async(req, res) =>{
-    if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   try{
-
-      const userID = req.session.user.userID;
-      
-      const transactionList = req.session.user.t_search_display;
-      const budgetList = req.session.user.b_search_display;
-      const goalList = req.session.user.g_search_display;
-
-      const user = await findUser(userID);
-     
-      let perPage = 3;
-      let t_page = req.query.t_page || 1;
-      let b_page = req.query.b_page || 1;
-      let g_page = req.query.g_page || 1;
-      const locals = {
-         title : 'Search User Query',
-         description : 'Budgetier Search User Query',
-         file : './dashboard/search.ejs', 
-         messages : [],
-         board : "search",
-         info : {
-            name : 'Search User Query',          
-            page : 'search',
-         },
-         user : await findUser(userID),
-         transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
-         budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
-         goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
-         t_page,
-         b_page,
-         g_page,
-         t_pages : Math.ceil(transactionList.length/perPage),
-         b_pages : Math.ceil(budgetList.length/perPage),
-         g_pages : Math.ceil(goalList.length/perPage)
       }
-      
       res.render('main', locals)
+      }
+
    }catch(error){
-      console.log(error)
+      console.log(error);
+      await updateMessages(hostname, ["Error : Search Not Found."]);
+      res.redirect('/dashboard');
    }
 }
 

@@ -31,7 +31,9 @@ const dollarfy = async(amount)=>{
  * @param {String} userID - The unique _id of the associated User instance.
  * @param {String} name - The name of the associated goal instance.
  * @param {Double} targetAmount - The targeted goal amount to save.
- * @param {Double} savedAmount - The current amount saved towards target goal.  * 
+ * @param {Double} savedAmount - The current amount saved towards target goal. 
+ * @param {String} description - The description of the target goal. 
+ * @param {Int32} savedToDate - The date ending the duration of the goal. 
  * @param {Int32} categoryID - The categoryID that categorizes the goal. 
  * @returns {Object} The created instance of the goal object.
  * Returns null if :
@@ -163,8 +165,8 @@ const getGoalList = async(userID, page = 0, perPage = 0)=>{
  *      1. Invalid userID is provided.
  *      3. goalID is not associated with the User instance provided.
  */
-const updateGoal = async(userID, goalID, name, targetAmount, savedAmount,
-                         categoryID = 0, description = "") => {
+const updateGoal = async(userID, goalID, name, targetAmount, savedAmount, date,
+                         categoryID = 0, description = "", ) => {
     try{
         const user = await User.findOne({_id : userID});
         const index = user.goalList.indexOf(goalID);
@@ -173,7 +175,8 @@ const updateGoal = async(userID, goalID, name, targetAmount, savedAmount,
             if(goal){
                 goal.set('name', name);   
                 goal.set('targetAmount', await dollarfy(targetAmount));  
-                goal.set('savedAmount', await dollarfy(savedAmount));    
+                goal.set('savedAmount', await dollarfy(savedAmount)); 
+                goal.set('savedToDate', new Date(date));   
                 goal.set('categoryID', categoryID);  
                 goal.set('category', names[categoryID]);   
                 goal.set('description', description);   
@@ -356,6 +359,22 @@ const increaseSavedAmount = async(userID, goalID, amount) => {
     }
     return null;
 }
+/**
+ * Function to retrieve goal instances mathing search and type criteria 
+ * in the Goal collection of the Budgetier Accounts database. 
+ * @param {String} userID - The unique _id of the associated User instance. 
+ * @param {String} search - User provided search query.
+ * @param {Int32} type - Type of search query. 
+ *          0. Double (Monetary Value)
+ *          1. ObjectId
+ *          2. Date
+ *          3. String query
+ * @returns {Object} Agregated documents matching the search query
+ * Returns null if :
+ *      1. Invalid userID is provided.
+ *      2. No documents match search query.
+ *      3. Invalid type provided.
+ */
 const searchGoal= async(userID, search,type) =>{
     try{
         
@@ -389,6 +408,8 @@ const searchGoal= async(userID, search,type) =>{
                                         { description : { $regex:  new RegExp(search, "i")} } 
                                     ] 
                              })
+                             
+                            .select('_id userID name savedAmount targetAmount savedToDate category description')
                                     
         }
     }catch(error){

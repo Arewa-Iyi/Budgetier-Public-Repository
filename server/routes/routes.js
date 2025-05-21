@@ -82,7 +82,7 @@ router.get('/editProfile', userController.editProfile);
 router.get('/editEntry', userController.editEntry);
 
 // Post Search
-router.post('/search', userController.ragSearch);
+router.post('/search', userController.search);
 router.post('/searchDisplay', userController.searchDisplay);
 // Post Profile Forms
 router.post('/editProfile', userController.editProfilePost);

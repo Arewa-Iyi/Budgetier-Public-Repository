@@ -103,11 +103,12 @@ const addTransaction = async (userID, amount, type, categoryID = 0,
  * 
  */
 const updateBudgetSpentAmount = async (userID, categoryID,) => {
-    await Budget.updateOne(
+    
+    var budget  = await Budget.updateOne(
         { userID: userID, categoryID: categoryID },
         { spentAmount: await getSpentAmount(userID, categoryID) }
     );
-
+    console.log("updating budget : ", budget)
 }
 /**
  * Function to update a budget's instance in the Budget collection of the 
@@ -423,8 +424,24 @@ const updateTransactionDate = async (userID, transactionID, newDate) => {
     }
     return null;
 }
-const searchTransaction = async(userID, search, type) =>{
-    try{
+/**
+ * Function to retrieve transaction instances mathing search and type criteria 
+ * in the Transaction collection of the Budgetier Accounts database. 
+ * @param {String} userID - The unique _id of the associated User instance. 
+ * @param {String} search - User provided search query.
+ * @param {Int32} type - Type of search query. 
+ *          0. Double (Monetary Value)
+ *          1. ObjectId
+ *          2. Date
+ *          3. String query
+ * @returns {Object} Agregated documents matching the search query
+ * Returns null if :
+ *      1. Invalid userID is provided.
+ *      2. No documents match search query.
+ *      3. Invalid type provided.
+ */
+const searchTransaction = async(userID, search,type) =>{
+   try{
         
         if(type == 0){
             return await Transaction.find({userID : userID, amount : search})
@@ -442,6 +459,7 @@ const searchTransaction = async(userID, search, type) =>{
                                                     { description : { $regex:  new RegExp(search, "i")} } 
                                                 ] 
                                     })
+                                    .select('_id userID amount type date category description')
                                     
         }
     }catch(error){

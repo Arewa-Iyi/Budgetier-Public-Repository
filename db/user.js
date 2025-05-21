@@ -1,17 +1,8 @@
-/**
- * Name : Arewa (Morountudun) Ojelade
- * Date : 3/4/2025
- * File Name: user.js
- * Course : CMSC 495 Capstone in Computer Science
- * Project : Budgetier Capstone Project
- * Description : The purpose of the user.js file is to provide 
- * compact functions to Interact with the User collection of
- * the Budgetier Accounts database.
- */
-const User = require("./models/User.js");
+
 const Transaction = require("./models/Transaction.js");
 const Budget = require("./models/Budget.js");
 const Goal = require("./models/Goal.js");
+const User = require("./models/User.js");
 const {hashed, compareEntry} = require("./helper.js");
 
 /**

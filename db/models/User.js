@@ -21,6 +21,7 @@ const userSchema = new Schema({
   budgetList: [{ type: SchemaTypes.ObjectId, ref: 'Budget' }],
   goalList: [{ type: SchemaTypes.ObjectId, ref: 'Goal' }],
   budgetCategories: [{ type: SchemaTypes.Int32 }],
+  session: [{ type: SchemaTypes.ObjectId, ref: 'Session' }],
   totalAmount: { type: SchemaTypes.Double, required: true },
   version: {type: SchemaTypes.Int32, default: 3},
 }, { collection: 'User', timestamps: true });

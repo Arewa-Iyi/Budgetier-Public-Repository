@@ -10,14 +10,19 @@
  */
 const {addBudget, removeBudget, updateBudget, getBudget, getBudgetList} = require('../../db/budget.js');
 const {findUser} = require('../../db/user.js');
-
+const {findSession, logActivity, updateMessages} = require('../../db/session.js');
+const os = require('os');
+const hostname = os.hostname();
 // Display the addBudget page.
 exports.addBudget = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+      
+      await logActivity(hostname);
       const locals = {
          title : 'Add Budget',
          description : 'Budgetier Add Budget Form',
@@ -29,18 +34,26 @@ exports.addBudget = async(req, res)=>{
       }
       res.render('main', locals);
    }catch(error){
-      console.log(error)
-      res.redirect('/budgets')
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Budget not added.`]);
+      res.redirect('/budgets');
    }
 }
 
 // Handle post request to add a budget object
 exports.addBudgetPost = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
    try{
-      const userID = req.session.user.userID;
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      
+      await logActivity(hostname);
+      console.log("Adding Budget");
       const locals = {
          title : 'Add Budget',
          description : 'Budgetier Add Budget',
@@ -51,7 +64,7 @@ exports.addBudgetPost = async(req, res)=>{
             page : "Budget",
             error : "",
          },
-         
+         user
       }
       const {name,amount, category, description} = req.body;
       console.log(req.body)
@@ -61,42 +74,50 @@ exports.addBudgetPost = async(req, res)=>{
       }
       else{
          const result = await addBudget(userID, name, amount, category,
-                                          description,);
-                                          console.log(result);
+                                          description);
+         console.log(result);
          if(result){
+
             locals.messages = [`'${name}'Budget added.`];
          }  else{
             locals.messages = [`Operation failed. '${name}' Budget not added.`];
          
          }                              
-         locals.file = './dashboard/Budget.ejs'
+         locals.file = './dashboard/Budget.ejs';
       }
-      locals.user = await findUser(userID);
       locals.budgets = await getBudgetList(userID,1,10);
       res.render('main', locals);
    }catch(error){
-      console.log(error)
-      res.redirect('./budgets')
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Budget not added.`]);
+      res.redirect('/budgets');
    }
 }
 
 // Display the viewBudget page populated with passed param.id object.
 exports.viewBudget = async(req, res) => {
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const userID = req.session.user.userID;
    try{
-         const user = await findUser(userID);
-         const budget = await getBudget(userID,req.params.id);
-          
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      
+      const budgetID = req.params.id;
+      const budget = await getBudget(userID, budgetID);
+
+      await logActivity(hostname);
+      if(budget){
          const locals = {
             title : 'View Budget',
             description : 'Budgetier View Budget',
             file : './dashboard/view/viewBudget.ejs',
             messages : [],
             board : "budget",
-            user : user,
+            user,
             info : {
                name : 'View Budget',          
                page : 'Budget',
@@ -106,31 +127,44 @@ exports.viewBudget = async(req, res) => {
             
          }
          res.render('main', locals);
+      }
+      else{         
+         await updateMessages(hostname, [`Operation failed. Budget ${budgetID} not found.`]);
+         res.redirect('/budgets')
+      }
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Budget ${budgetID} not found.`]);
+      res.redirect('/budgets');
    }
    
 }
 
 // Display editBudget page populated with passed params.id object
 exports.editBudget = async(req, res) => {
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-   const userID = req.session.user.userID;
-   console.log(req.params.id);
+   try{
+      var session = await findSession(hostname);
 
-   if(req.params.id){
-      try{
-         const budget = await getBudget(userID,req.params.id);
-         console.log(budget.updatedAt);
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+
+      const budgetID = req.params.id;
+      const budget = await getBudget(userID,req.params.id);
+
+      await logActivity(hostname);   
+
+      if(budget){
          const locals = {
             title : 'Edit Budget',
             description : 'Budgetier Edit Budget',
             file : './dashboard/edit/editBudget.ejs',
             messages : "",
             board : "budget",
-            user : await findUser(userID),
+            user,
             info : {
                name : `Edit Budget`,          
                page : 'Budget',
@@ -140,44 +174,51 @@ exports.editBudget = async(req, res) => {
             
          }
          res.render('main', locals);
-      }catch(error){
-         console.log(error);
       }
+          else{         
+         await updateMessages(hostname, [`Operation failed. Budget ${budgetID} not found.`]);
+         res.redirect('/budgets')
+      }
+   }catch(error){
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Budget ${budgetID} not edited.`]);
+      res.redirect('/budgets');
    }
+   
 }
-
 // Handle post request to edit passed params.id object
 exports.editBudgetPost = async(req, res) =>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
-   }
-      const userID = req.session.user.userID;
-      const budgetID = req.params.id || locals.budgetID;
    try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);   
+      const budgetID = req.params.id || locals.budgetID;
       const budget = await getBudget(userID, budgetID);
-      const locals = {
-         title : 'Edit Budget',
-         description : 'Budgetier Edit Budget Form',
-         file : './dashboard/edit/editBudget.ejs',
-         messages : [],
-         board : "budget",
-         info : {
-            name : 'Edit Budget',          
-            page : 'Budget',
-            error : "",
-         },
-         params : budgetID,
+      if(budget){
+         const locals = {
+            title : 'Edit Budget',
+            description : 'Budgetier Edit Budget Form',
+            file : './dashboard/edit/editBudget.ejs',
+            messages : [],
+            board : "budget",
+            info : {
+               name : 'Edit Budget',          
+               page : 'Budget',
+               error : "",
+            },
+            params : budgetID,
+            user
+         }
          
-      }
-      
-      if(!budget){            
-         locals.file = './dashboard/budget.ejs'
-         locals.messages = ["Budget not found."];
-      }
-      else{         
          var {name, amount, category, description} = req.body; 
          if(amount && !(/^\d*(\.\d+)?([eE]\d+)?$/.test(amount))){           
-            locals.info.error = "Please enter a positive number."
+            locals.info.error = "Please enter a positive number.";
          }          
          else{
             name = name ? name : budget.name;
@@ -195,46 +236,57 @@ exports.editBudgetPost = async(req, res) =>{
             }                             
             locals.file = './dashboard/budget.ejs'        
          }
-      } 
-        
-   locals.user = await findUser(userID)   
-   locals.budgets = await getBudgetList(userID,1,10);
-   res.render('main', locals);   
+   
+         locals.budgets = await getBudgetList(userID,1,10);
+         res.render('main', locals);   
+      }else{         
+         await updateMessages(hostname, [`Operation failed. Budget ${budgetID} not found.`]);
+         res.redirect('/budgets')
+      }
    }catch(error){
-      console.log(error);
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Budget ${budgetID} not updated.`]);
+      res.redirect('/budgets');
    }
+   
 }
 
 // Handle post request to delete passed params.id object
 exports.deleteBudget = async(req, res)=>{
-   if(!(req.session.athenticated)){
-      res.redirect('/login');
+   try{
+      var session = await findSession(hostname);
+
+      if(!(session.authenticated)){
+         res.redirect('/login');
+      }
+   
+      const userID = session.userID;
+      const user = await findUser(userID);
+      await logActivity(hostname);   
+      const budgetID = req.params.id;   
+      const budget = await removeBudget(userID, budgetID);
+      if(budget){
+         const locals = {
+            title : 'Budgets Dashboard',
+            description : 'Free NodeJS User Management Syestem',
+            file : './dashboard/budget.ejs',
+            messages : [`${budget.name} Budget removed.`],      
+            board : "budget",   
+            user,
+            budgets : await getBudgetList(userID,1,10)
+            
+         }
+         res.render('main',locals);
+      }
+      else{         
+         await updateMessages(hostname, [`Operation failed. Budget ${budgetID} not found.`]);
+         res.redirect('/budgets')
+      }
+   }catch(error){
+      console.log(error);      
+      await updateMessages(hostname, [`Error Encountered. Budget ${budgetID} not removed.`]);
+      res.redirect('/budgets');
    }
    
-   try{
-      const budgetID = req.params.id;   
-      const userID = req.session.user.userID;
-      const locals = {
-         title : 'Budgets Dashboard',
-         description : 'Free NodeJS User Management Syestem',
-         file : './dashboard/budget.ejs',
-         messages : [],      
-         board : "budget",         
-         
-      }
-
-      const budget = await removeBudget(userID, budgetID);
-      if(!budget){
-         locals.messages = ["Operation failed. Budget not removed."]
-      }else{
-         locals.messages = [`${budget.name} Budget removed.`]
-      }
-      
-      locals.user = await findUser(userID);
-      locals.budgets = await getBudgetList(userID,1,10); 
-      res.render('main',locals);
-   }catch(error){
-      console.log(error);
-   }
 
 }

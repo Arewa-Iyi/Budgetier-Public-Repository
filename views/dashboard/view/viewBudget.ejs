@@ -51,19 +51,19 @@
     <li class="list-group-item">
         <div class="row">
             <div class="col" style="max-width : 150px"><b>Budget Amount :</b></div>
-            <div class="col"><b>$<%=budget.amount %></b></div>
+            <div class="col"><b><%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(budget.amount); %></b></div>
         </div>
     </li>
     <li class="list-group-item">
         <div class="row">
             <div class="col" style="max-width : 150px"><b>Spent Amount :</b></div>
-            <div class="col"><b>$<%=budget.spentAmount %></b></div>
+            <div class="col"><b><%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(budget.spentAmount);%></b></div>
         </div>
     </li>
     <li class="list-group-item">
         <div class="row">
             <div class="col" style="max-width : 150px"><b>Category :</b></div>
-            <div class="col"><b><%=budget.category%></b></div>
+            <div class="col"><b><%=budget.category %></b></div>
         </div>
     </li>
     <li class="list-group-item">

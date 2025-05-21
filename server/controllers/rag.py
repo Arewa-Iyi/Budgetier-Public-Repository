@@ -11,13 +11,7 @@
  * Accounts database. When a query is requested, a semantic vector is created
  * and a Vector search is conducted to aggregate matching documents.
  * The aggregated documents and saved to seperate json files for each collection.
- * Reference
- * freeCodeCamp.org. (2023, December 11). 
- *    Vector Search RAG Tutorial – Combine Your Data with LLMs with Advanced Search.
- *    YouTube. https://www.youtube.com/watch?v=JEBDfGqrAUA&list=PL6GWKX4_k1y0u3ib3vlhn6qcrCvsC5ofN&index=2
- *
- * MongoDB. (2024, August 15). Building a RAG Pipeline in JavaScript with Memory. 
- *    YouTube. https://www.youtube.com/watch?v=EcZMe8yOcs8&list=PL6GWKX4_k1y0u3ib3vlhn6qcrCvsC5ofN
+
 '''
 import pymongo
 import requests
@@ -35,7 +29,7 @@ db = client.Accounts
 col_t = db.Transaction
 col_b = db.Budget
 col_g = db.Goal
-
+col_s = db.Session
 '''
 Function to generate semantic vector via HuggingFace Sentence Transformer.
 Returns a list of embeddings.
@@ -109,13 +103,13 @@ def query_documents(user, query, col):
     return query_set
 
 '''
-This is the main function that process system arguements, processes and queries embeddings for each collection.
+This is the main function that process system arguement, processes and queries embeddings for each collection.
 The results and then saved to corresponding json files.
 '''
 def main():
     user =   sys.argv[1]    
     query =  sys.argv[2]
-
+    hostname = sys.argv[3]
     print("in main")
     
 
@@ -126,19 +120,15 @@ def main():
     set_t = query_documents(user, query, col_t)
     set_b = query_documents(user, query, col_b)
     set_g = query_documents(user, query, col_g)
-
-    try:
-
-        with open("./server/controllers/results/t_results.json", 'w', encoding="utf-8") as file_t:
-            json.dump(set_t, file_t, indent=4)
-        with open("./server/controllers/results/b_results.json", 'w', encoding="utf-8") as file_b:
-            json.dump(set_b, file_b, indent=4)
-        with open("./server/controllers/results/g_results.json", 'w', encoding="utf-8") as file_g:
-            json.dump(set_g, file_g, indent=4)
-            print(set_t, set_b, set_g)
-
-    except Exception as e :
-        print(e)
-
+    
+    print("set_t : ", set_t)
+    print("set_b : ", set_b)
+    print("set_g : ", set_g)
+    doc = col_s.update_one({'userID' : ObjectId(user), 'hostname': hostname},
+                           {'$set':{
+                               'transactionRag' : set_t,
+                               'budgetRag' : set_b,
+                               'goalRag' : set_g
+                           }})
 
 main()

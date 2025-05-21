@@ -50,7 +50,7 @@ const addBudget = async(userID, name, amount, categoryID = 0, description = "") 
     if(!category_exist){
         categoryID = 0;
     }
-    if(user && name && amount > 0 && avaialable_category){
+    if(user && name && amount > 0 && available_category){
         const budget = await Budget.create({
             userID : userID,
             name : name,
@@ -327,7 +327,7 @@ const budgetTransactions = async(userID, categoryID) => {
     return list;
 }
 /**
- * Function to get sum of epense transactions aggregated by provided categoryID
+ * Function to get sum of expense transactions aggregated by provided categoryID
  * in the User collection of the Budgetier Accounts database. 
  * @param {String} userID - The unique _id of the associated User instance. 
  * @param {Int32} categoryID - The id of the category. 
@@ -353,7 +353,22 @@ const getSpentAmount = async(userID, categoryID) =>{
     }
     return await dollarfy(spentAmount);
 }
-
+/**
+ * Function to retrieve budget instances mathing search and type criteria 
+ * in the Budget collection of the Budgetier Accounts database. 
+ * @param {String} userID - The unique _id of the associated User instance. 
+ * @param {String} search - User provided search query.
+ * @param {Int32} type - Type of search query. 
+ *          0. Double (Monetary Value)
+ *          1. ObjectId
+ *          2. Date
+ *          3. String query
+ * @returns {Object} Agregated documents matching the search query
+ * Returns null if :
+ *      1. Invalid userID is provided.
+ *      2. No documents match search query.
+ *      3. Invalid type provided.
+ */
 const searchBudget= async(userID, search,type) =>{
     try{
         
@@ -364,7 +379,7 @@ const searchBudget= async(userID, search,type) =>{
                             amount: search
                         },
                         {
-                            savedAmount: search
+                            spentAmount: search
                         },
                     ],
                 
@@ -387,7 +402,7 @@ const searchBudget= async(userID, search,type) =>{
                                             { description : { $regex:  new RegExp(search, "i")} } 
                                         ] 
                                 })
-                                    
+                                .select('_id userID name amount spentAmount category description')  
         }
     }catch(error){
         console.log(error);

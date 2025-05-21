@@ -1,12 +1,12 @@
 <!-- 
  * Name : Arewa (Morountudun) Ojelade
  * Date : 3/4/2025
- * File Name: dashboard.ejs
+ * File Name: search.ejs
  * Course : CMSC 495 Capstone in Computer Science
  * Project : Budgetier Capstone Project
- * Description : The purpose of the dashboard.ejs file is to display the 
- * user's main dashboard with The three most recent transactions, budgets,
- * and goals. It additionally executes appropriate logic in accordance 
+ * Description : The purpose of the search.ejs file is to display the 
+ * user's search within the transactions, budgets,
+ * and goals collections. It additionally executes appropriate logic in accordance 
  * with passed locals to view, edit and delete clicked elements.
  * Reference : BootStrap website
  *              Raddy. (2023, March 15). 
@@ -14,7 +14,10 @@
  *              YouTube. https://www.youtube.com/watch?v=PAm_QcN6Ffs
 -->
 <div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1><%=locals.user.firstName%>'s Search</h1>
+    <h1><%=locals.user.firstName%>'s Search Results</h1>
+
+  
+
 </div>
 
 <% (locals.messages).forEach(element => { %>
@@ -27,6 +30,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h3>Transaction Search Results</h3>
 </div>
+
     <div class="table-responsive" style = "font-size: 20px;" >
         <table class="table table-striped table-sm">
             <thead>
@@ -78,8 +82,40 @@
                    <% }) %>
                </tbody>
         </table>
-    </div>
+        
 
+    <% if ((locals.transactions)){ %>
+            <nav aria-label = "Transaction Search Pagination">
+                <ul class = "pagination justify-content-center mt-5">
+                    <% if ((locals.t_page) == 1) { %>
+                        <li class = "page-item disabled"> <a href ="#" class="page-link">First</a></li>
+                    <% } else { %>
+                        <li class = "page-item"> <a href ="/searchDisplay/?t_page=1&b_page=<%= locals.b_page%>&g_page=<%= locals.g_page%>&board=search" class="page-link">First</a></li>        
+                    <% } %>
+                    <% var i = (Number(locals.t_page)) > 5 ? Number(locals.t_page) - 4 : 1 %>
+                    <% if(i !== 1) {%>
+                        <li class="page-item disabled"><a href = "#" class="page-link">...</a></li>
+                    <% } %>
+                    <% for(; i <= (Number(locals.t_page) + 4) && i <= locals.t_pages; i++ ) { %>
+                        <% if (i == locals.t_page) { %>
+                            <li class="page-item disabled"><a href = "#" class="page-link"><%= i %></a></li>
+                        <% } else {%>
+                             <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=i%>&b_page=<%= locals.b_page%>&g_page=<%= locals.g_page%>&board=search" class="page-link"><%= i %></a></li>        
+                   
+                        <% } %>
+                        <% if (i == Number(locals.t_page) + 4 && i < locals.t_pages) { %>
+                            <li class="page-item disabled"><a href = "#" class="page-link">...</a></li>
+                        <% } %>
+                    <% } %>
+                    <% if ((locals.t_page) == locals.t_pages) { %>
+                        <li class = "page-item disabled"> <a href ="#" class="page-link">Last</a></li>
+                    <% } else { %>                        
+                        <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=locals.t_pages%>&b_page=<%= locals.b_page%>&g_page=<%= locals.g_page%>&board=search" class="page-link">Last</a></li>  
+                    <% } %>        
+                </ul>
+            </nav>
+    <% } %>
+</div>
 
 <div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h3>Budget Search Results</h3>
@@ -135,6 +171,40 @@
                <% }) %>
            </tbody>
     </table>
+    <% if ((locals.budgets)){ %>
+            <nav aria-label = "Budget Search Pagination">
+                <ul class = "pagination justify-content-center mt-5">
+                    <% if ((locals.b_page) == 1) { %>
+                        <li class = "page-item disabled"> <a href ="#" class="page-link">First</a></li>
+                    <% } else { %>
+                        <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%= locals.t_page%>&b_page=1&g_page=<%= locals.g_page%>&board=search" class="page-link">First</a></li>        
+                    <% } %>
+                    <% var i = (Number(locals.b_page)) > 5 ? Number(locals.b_page) - 4 : 1 %>
+                    <% if(i !== 1) {%>
+                        <li class="page-item disabled"><a href = "#" class="page-link">...</a></li>
+                    <% } %>
+                    <% for(; i <= (Number(locals.b_page) + 4) && i <= locals.b_pages; i++ ) { %>
+                        <% if (i == locals.b_page) { %>
+                            <li class="page-item disabled"><a href = "#" class="page-link"><%= i %></a></li>
+                        <% } else {%>
+                             <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=locals.t_page%>&b_page=<%= i%>+&g_page=<%= locals.g_page%>&board=search" class="page-link"><%= i %></a></li>        
+                   
+                        <% } %>
+                        <% if (i == Number(locals.b_page) + 4 && i < locals.b_pages) { %>
+                            <li class="page-item disabled"><a href = "#" class="page-link">...</a></li>
+                        <% } %>
+                    <% } %>
+                    <% if ((locals.b_page) == locals.b_pages) { %>
+                        <li class = "page-item disabled"> <a href ="#" class="page-link">Last</a></li>
+                    <% } else { %>                        
+                        <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=locals.t_page%>&b_page=<%= locals.b_pages%>&g_page=<%= locals.g_page%>&board=search" class="page-link">Last</a></li>  
+                    <% } %>
+            
+            
+            
+                </ul>
+                </nav>
+    <% } %>
 </div>
 
 
@@ -196,4 +266,38 @@
                <% }) %>
            </tbody>
     </table>
+        <% if ((locals.goals)){ %>
+            <nav aria-label = "Transaction Search Pagination">
+                <ul class = "pagination justify-content-center mt-5">
+                    <% if ((locals.g_page) == 1) { %>
+                        <li class = "page-item disabled"> <a href ="#" class="page-link">First</a></li>
+                    <% } else { %>
+                        <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=locals.t_page%>&b_page=<%= locals.b_page%>&g_page=1&board=search" class="page-link">First</a></li>        
+                    <% } %>
+                    <% var i = (Number(locals.g_page)) > 5 ? Number(locals.g_page) - 4 : 1 %>
+                    <% if(i !== 1) {%>
+                        <li class="page-item disabled"><a href = "#" class="page-link">...</a></li>
+                    <% } %>
+                    <% for(; i <= (Number(locals.g_page) + 4) && i <= locals.g_pages; i++ ) { %>
+                        <% if (i == locals.g_page) { %>
+                            <li class="page-item disabled"><a href = "#" class="page-link"><%= i %></a></li>
+                        <% } else {%>
+                             <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=locals.g_page%>&b_page=<%= locals.b_page%>&g_page=<%= i %>&board=search" class="page-link"><%= i %></a></li>        
+                   
+                        <% } %>
+                        <% if (i == Number(locals.g_page) + 4 && i < locals.g_pages) { %>
+                            <li class="page-item disabled"><a href = "#" class="page-link">...</a></li>
+                        <% } %>
+                    <% } %>
+                    <% if ((locals.g_page) == locals.g_pages) { %>
+                        <li class = "page-item disabled"> <a href ="#" class="page-link">Last</a></li>
+                    <% } else { %>                        
+                        <li class = "page-item"> <a href ="/searchDisplay/?t_page=<%=locals.t_page%>&b_page=<%= locals.b_page%>&g_page=<%= locals.g_pages%>&board=search" class="page-link">Last</a></li>  
+                    <% } %>
+            
+            
+            
+                </ul>
+                </nav>
+            <% } %>
 </div>
