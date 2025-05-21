@@ -30,5 +30,5 @@ const sessionSchema = new Schema({
   goalRag: [{ type: SchemaTypes.Mixed }],
   version: {type: SchemaTypes.Int32, default: 3},
 }, { collection: 'Session', timestamps: true });
-const User = model('Session', sessionSchema);
+const Session = model('Session', sessionSchema);
 module.exports = Session;
