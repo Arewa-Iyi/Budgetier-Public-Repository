@@ -7,7 +7,12 @@
  * application. It is responsible for creating the application,
  * authenticating database connection, generating secure routes,
  * and authenticating user sessions.
+ * 
+ * Update 5/21/2025 
+ * Removed express session handling.
+ * Restructured with internal database Session handling.
  */
+
 
 const express = require('express');
 //const session = require('express-session');
@@ -32,28 +37,7 @@ app.use(express.static('db'));
 
 const connectDB = require('./public/js/configure.js');  connectDB();
 
-//console.log(connection)
-// connection.on('disconnected', (req, res) =>{
-//     app.close(()=> {
-//         console.log("Database Disconnected. Application closing...");
-//     });
-//     process.exit(0);
-// })
-// connection.on('error', (req, res) =>{
-//     app.close(()=> {
-//         console.log("Connection Error. Application closing...");
-//     });
-//     process.exit(0);
-// })
 require('dotenv').config();
-      
-// app.use(session({
-//     secret : process.env.SESSION_KEY,
-//     cookie : {maxAge : 3600000}, // 1 hour
-//     resave : false,
-//     saveUninitialized : false,
-//     store : store
-// }));
 
 app.use(flash());
 
@@ -76,20 +60,28 @@ app.get("*", (req, res)=>{
         file : './404.ejs'
     }
     var {page,board} = req.query;
+
+    // Redirect to transactions dashboard with requested page
     if(board == "transactions"){
         res.redirect(`/transactions/?page=${page}`)
     }
+    
+    // Redirect to budgets dashboard with requested page
     if(board == "budgets"){
         res.redirect(`/budgets/?page=${page}`)
     }
+    
+    // Redirect to goals dashboard with requested page
     if(board == "goals"){
         res.redirect(`/goals/?page=${page}`)
     }
+    
+    // Redirect to searchDispy with requested page
     if(board == "search"){
-        
-    var {t_page, b_page, g_page} = req.query;
-        res.redirect(`/searchDisplay/?t_page=${t_page}?b_page=${b_page}?g_page=${g_page}`)
-    }
+        var {t_page, b_page, g_page} = req.query;
+            res.redirect(`/searchDisplay/?t_page=${t_page}?b_page=${b_page}?g_page=${g_page}`)
+        }
+    
     res.status(404).render('main.ejs',);
 });
 
@@ -98,5 +90,3 @@ const port = 5000;
 app.listen(port, () =>{
     console.log(`Server running on Port : ${port}`);
 });
-
-module.exports = {app}
