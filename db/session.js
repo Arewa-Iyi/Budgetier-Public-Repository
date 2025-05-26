@@ -11,14 +11,22 @@
 const Session = require("./models/Session.js");
 const Transaction = require("./models/Transaction.js");
 const User = require("./models/User.js");
+/**
+ * Function to find  a user session in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} hostname - The unique hostname of the session. 
+ * @param {Boolean} disable - boolean to disable session 
+ * @returns {Object} The instance of the session object.
+ * Returns null if :
+ *      1. Invalid hostname is provided. 
+ */
 const findSession = async(hostname, disable = false)=>{
     try{
         var session = await Session.findOne({hostname});
         var currentTime = new Date(Date.now());
         if(session){
             if((session.duration < currentTime) | disable){
-                session.authenticated = false;
-                session.save();
+                await endSession(hostname);
             }
             return session;
         }
@@ -27,6 +35,11 @@ const findSession = async(hostname, disable = false)=>{
         console.log(error);
     }
 }
+/**
+ * Function to end  a user session in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} hostname - The unique hostname of the session. 
+ */
 const endSession = async(hostname)=>{
     try{
         var session = await findSession(hostname, true);
@@ -37,6 +50,18 @@ const endSession = async(hostname)=>{
         console.log(error);
     }
 }
+
+/**
+ * Function to create and authenticate a user session in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} userID - The unique userID of the session. 
+ * @param {String} hostname - The unique hostname of the session. 
+ * @param {Boolean} authenticated - boolean of session authentication. 
+ * @param {String} ip - The ip address of user's system
+ * @returns {Object} The instance of the session object.
+ *  Returns null if :
+ *      1. Invalid hostname or userID is provided. 
+ */
 const createSession = async(userID, hostname, authenticated = false,ip = "", )=>{
 
     try{
@@ -52,10 +77,8 @@ const createSession = async(userID, hostname, authenticated = false,ip = "", )=>
                 
                 User.updateOne({_id : userID},{session : session._id});
             }
-            console.log(`Session Created for ${hostname}`);
-            
-            return session;
-            
+            console.log(`Session reauthenticated for ${hostname}`); 
+            return session;      
         }
         else{
             if(userID && hostname){
@@ -68,15 +91,19 @@ const createSession = async(userID, hostname, authenticated = false,ip = "", )=>
                 User.updateOne({_id : userID},{session : session._id});
                 
                 console.log(`Session Created for ${hostname}`);
-                return session;
             }
         }
-        return null;
+        return session;
     }
     catch(error){
         console.log(error)
     }
 }
+/**
+ * Function to log user activity and extend user session by 15 minutes in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} hostname - The unique hostname of the session. 
+ */
 const logActivity = async(hostname) =>{
     try{
         var session = await Session.findOne({hostname});
@@ -95,6 +122,12 @@ const logActivity = async(hostname) =>{
     }
 
 }
+/**
+ * Function to update session messages displayed in pages in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} hostname - The unique hostname of the session. 
+ * @param {Array} messages - Array of strings containing messages to be displayed 
+ */
 const updateMessages = async(hostname, messages) =>{
     try{
         var session = await Session.findOne({hostname});
@@ -104,45 +137,56 @@ const updateMessages = async(hostname, messages) =>{
         }
     }catch(error){console.log(error);}
 }
-const saveSearchResults = async(hostname, userID, transactions,budgets,goals, append = true) =>{
-    console.log("in save Search",transactions)
-    if(append){
-        await appendSearchResults(hostname, userID, transactions, budgets, goals);
-    }
-    else{
-       await Session.updateOne({hostname, userID},
-           {
-               transactionList : new Set(transactions),
-               budgetList : new Set(budgets),
-               goalList : new Set(goals)
-           }
-       );
-       console.log(se)
-    }
-}
-const appendSearchResults = async(hostname, userID, transactions,budgets,goals) =>{
+/**
+ * Function to update search results in the appropriate session lists in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} userID - The unique userID of the session. 
+ * @param {String} hostname - The unique hostname of the session.  
+ * @param {Array} transactions - Array of transaction documents to be added to seassion transactionList.
+ * @param {Array} budgets - Array of budget documents to be added to seassion budgetList.
+ * @param {Array} goals - Array of goal documents to be added to seassion goalList.
+ */
+const saveSearchResults = async(hostname, userID, transactions,budgets,goals, ) =>{
     var session = await Session.findOne({hostname, userID});
     
+    // concatenate original list to passed list if session list is not empty
     var transactions  = session.transactionList === 0 ? 
                         new Set([...session.transactionList, ...transactions]) : transactions;
     var budgets = session.budgetList === 0 ? new Set( [...session.budgetList, ...budgets]) : budgets;
     var goals = session.goalList === 0 ? new Set([...session.goalList, ...goals]) : goals;
 
+    // update results
     session.set('transactionList', transactions);
     session.set('budgetList', budgets);
     session.set('goalList', goals);
-    console.log("in append search", session.transactionList);
+
+    // save update
     await session.save();
 }
+
+/**
+ * Function to retireve search results matchin the hostname and userID in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} userID - The unique userID of the session. 
+ * @param {String} hostname - The unique hostname of the session.  
+ * @returns {Array} The Array of the transaction, budget and goal documents.
+ *  Returns null if :
+ *      1. Invalid hostname or userID is provided. 
+ *      2. Array is empty.
+ */
 const getSearchResults = async(hostname, userID )=>{
-    var session = await Session.findOne({hostname,userID});
-    const transactionList = session.transactionList;
-    const budgetList = session.budgetList;
-    const goalList = session.goalList;
-    return transactionList, budgetList, goalList;
+    var session = await Session.findOne({hostname,userID});    
+    return session.transactionList, session.budgetList, session.goalList;
 }
+
+/**
+ * Function to clear search results matchin the hostname and userID in the
+ * Session collection of the Budgetier Accounts database.
+ * @param {String} userID - The unique userID of the session. 
+ * @param {String} hostname - The unique hostname of the session.  
+ */
 const clearSearch = async(hostname, userID) =>{
-      Session.updateOne({hostname, userID},
+    await Session.updateOne({hostname, userID},
            {
                transactionList : [],
                budgetList :[],
