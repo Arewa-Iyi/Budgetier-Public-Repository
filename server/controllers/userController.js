@@ -7,6 +7,13 @@
  * Description : The purpose of the userController.js file is to 
  * execute appropriate logic in accordance with requests for the 
  * main dashboard web framework of the Budgetier application.
+ * 
+ * Update 5/21/2025
+ *    Implemented a combination of RegEx and RAG search using a child 
+ *    proccess that runs the rag.py file aggregating the most similar
+ *    transactions, budgets and goals to the provided user query using
+ *    a manual dot product simmilarty search of the hugging face 
+ *    'all-MiniLM-L6-v2' LLM model. 
  */
 const {getTransactionList,exportTransctionList,searchTransaction} = require('../../db/transaction.js');
 const {getBudgetList,searchBudget} = require('../../db/budget.js');
@@ -546,7 +553,7 @@ exports.search = async(req, res) => {
       let t_page = req.query.t_page || 1;
       let b_page = req.query.b_page || 1;
       let g_page = req.query.g_page || 1;
-      
+
       // Assign appropriate values for locals document.
       const locals = {
          title : 'Search User Query',
