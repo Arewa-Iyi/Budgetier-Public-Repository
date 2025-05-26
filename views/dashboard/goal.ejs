@@ -52,7 +52,7 @@
                    <td><%= element.name %></td>
                   <td><%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(element.targetAmount);%></td>                   
                    <td><%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(element.savedAmount);%></td>
-                   <<td ><span class = "progress " style = "height: 30px; width: 150px;">
+                   <td ><span class = "progress " style = "height: 30px; width: 150px;">
                     <span class = "progress-bar bg-success" style = "<%=`width : ${progress}%;`  %>font-size :20px;"><%= progress %>%</span>
                     </span> </td>
                    <td><%= new Date(element.savedToDate).toUTCString() %></td>
