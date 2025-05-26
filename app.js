@@ -15,8 +15,7 @@
 
 
 const express = require('express');
-//const session = require('express-session');
-//const store = new session.MemoryStore();
+
 const app = express();
 
 const flash = require('connect-flash');
