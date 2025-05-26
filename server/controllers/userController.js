@@ -25,22 +25,35 @@ exports.dashboard = async(req, res)=>{
    try{
       var session = await findSession(hostname);
 
+      // redirect to login if session is not authenticated
       if(!(session.authenticated)){
          res.redirect('/login');
       }
-   
+      
+      // populate userID and user iformation
       const userID = session.userID;
       const user = await findUser(userID);
+
+      // log activity for session to increase duration by 15 minutes
       await logActivity(hostname);
+
+      // Generate date information for csv file name and transaction export
       const month = ["January","February","March","April","May","June",
          "July","August","September","October","November","December"];
       const date =  new Date(Date.now());
       var tMonth = month[date.getMonth()];
       var tYear = date.getFullYear();
+
+      // Generate csv file
       const csvConfig = mkConfig({useKeysAsHeaders : true});
+      // Generate csv file name
       const exportFile = `${tMonth}_${tYear}_transactions.csv`;
-      console.log(exportFile);
+
+       // assign user's current month's tractions to the transactions variable
       var transactions = await exportTransctionList(userID);
+
+      // Assign Transctions field a string of none in transation document
+      // if user has no transactions for the requested month.
       if(!transactions){
          transactions = [{
             firstName : user.firstName,
@@ -49,19 +62,28 @@ exports.dashboard = async(req, res)=>{
             Transactions : "None"
          }]
       }
+
+      // Assign appropriate values for locals document. 
       const locals = {
          title : 'Main Dashboard',
          description : 'Free NodeJS User Management Syestem',
          file : './dashboard/dashboard.ejs',
-         messages : (session.messages).slice(),
+
+         // assign a copy of session or locals messages  to to the messages field
+         messages : (session.messages).slice() || locals.messages, 
+
          board : "dashboard",
          user : user,
          exportFile,
          export : await generateCsv(csvConfig)(transactions),
+
+         // Retrieve the three most recent transactions, budgets and goals
          transactions : await getTransactionList(userID,1,3),
          budgets : await getBudgetList(userID,1,3),
          goals : await getGoalList(userID,1,3)
       }
+
+      // clear messages for session
       await updateMessages(hostname, []);
       res.render('main', locals);
    }catch(error){
@@ -74,20 +96,27 @@ exports.dashboard = async(req, res)=>{
 exports.transactions = async(req, res)=>{
     try{
       var session = await findSession(hostname);
-
+      
+      // redirect to login if session is not authenticated
       if(!(session.authenticated)){
          res.redirect('/login');
       }
    
+      // populate userID and user information
       const userID = session.userID;
       const user = await findUser(userID);
+      
+      // log activity for session to increase duration by 15 minutes
       await logActivity(hostname);
 
-      let perPage = 10;
-      let page = req.query.page || 1;
-      console.log(req.query.page);
-      const total = await getTransactionList(userID); 
-      const result = await getTransactionList(userID,page,perPage); 
+
+      let perPage = 10;  // Display 10 transactions per page
+      let page = req.query.page || 1; // page requested for display
+   
+      const total = await getTransactionList(userID); // Retrieve all transactions
+      const result = await getTransactionList(userID,page,perPage); // Retrieve only transactions to be displayed
+      
+      // Assign appropriate values for locals document.
       const locals = {
          title : 'Transactions Dashboard',
          description : 'Free NodeJS User Management Syestem',
@@ -95,7 +124,7 @@ exports.transactions = async(req, res)=>{
          board : "transaction",
          user,
          transactions : result,
-         messages : (session.messages).slice(),  
+         messages : (session.messages).slice() || locals.messages,  
          pages : Math.ceil(total.length/perPage)
       }
      
@@ -125,7 +154,7 @@ exports.budgets = async(req, res)=>{
          title : 'Budgets Dashboard',
          description : 'Free NodeJS User Management Syestem',
          file : './dashboard/budget.ejs',
-         messages : [],      
+         messages : (session.messages).slice() || locals.messages,      
          board : "budget",
          user : await findUser(userID),
       }
@@ -166,7 +195,7 @@ exports.goals = async(req, res)=>{
          title : 'Goals Dashboard',
          description : 'Free NodeJS User Management Syestem',
          file : './dashboard/goal.ejs',
-         messages : (session.messages).slice(),      
+         messages : (session.messages).slice() || locals.messages,      
          board : "goal"
       }
       let perPage = 10;
@@ -207,7 +236,7 @@ exports.profile = async(req, res)=>{
          description : 'Budgetier User Profile',
          file : './dashboard/profile.ejs',      
          board : "profile",
-         messages : session.messages.slice(),
+         messages : session.messages.slice() || locals.messages,
          board : "profile",
          user : user,
       }
@@ -412,6 +441,7 @@ exports.editEntryPost = async(req, res) =>{
    }
 }
 
+// Handle Search Request 
 exports.search = async(req, res) => {
    try{
       var session = await findSession(hostname);
@@ -427,6 +457,9 @@ exports.search = async(req, res) => {
       let searchTerm = req.body.searchTerm;
       let search  = searchTerm.split(" "); 
       let query = "";
+      let transactionList = [];
+      let budgetList = [];
+      let goalList = []
       search.forEach(async el =>{
 
          let path = 3;
@@ -447,69 +480,75 @@ exports.search = async(req, res) => {
          budgets      = await searchBudget(userID,el,path);
          goals        = await searchGoal(userID,el,path);   
 
-         saveSearchResults(hostname, userID, transactions, budgets, goals, true);
+         await saveSearchResults(hostname, userID, transactions, budgets, goals);
       })
       if(query){
-         console.log("conducting Rag Search.")
-         const child_process = spawn('python', ['./server/controllers/rag.py', userID, query, hostname])
-         child_process.stdout.on('data', async (data) =>{
-            console.log(`Logging : ${data}`);
 
+			console.log("conducting Rag Search.")
+			const child_process = spawn('python', ['./server/controllers/rag.py', userID, query, hostname])
+			child_process.stdout.on('data', async (data) =>{
+				console.log(`Logging : ${data}`);
+
+			})
+			child_process.stderr.on('data', async (data) =>{
+				console.error(`stderr: ${data}`);
+
+			})
+			child_process.on('close', async(code) =>{
+         
+				const t_results = require('./results/t_results.json');
+				const b_results = require('./results/b_results.json');
+				const g_results = require('./results/g_results.json');
+
+				transactionList = JSON.parse(JSON.stringify([...session.transactionList, ...t_results]));
+				budgetList = JSON.parse(JSON.stringify([...session.budgetList, ...b_results]));
+				goalList = JSON.parse(JSON.stringify([...session.goalList, ...g_results]));           
+            
+              
+            
+            await saveSearchResults(hostname, userID, transactionList, budgetList, goalList);
+            
+				console.log(`child process exited with code ${code}`);
+
+				if(!(transactionList || budgetList || goalList)){
+				   await updateMessages(hostname, ["No Results Found."]);
+				   res.redirect('/dashboard');
+				}  
+		  
+				let perPage = 3;
+				let t_page = req.query.t_page || 1;
+				let b_page = req.query.b_page || 1;
+				let g_page = req.query.g_page || 1;
+				const locals = {
+					title : 'Search User Query',
+					description : 'Budgetier Search User Query',
+					file : './dashboard/search.ejs',
+					messages : [],
+					board : "search",
+					info : {
+						name : `Search User Query`,          
+						page : 'search',
+					},
+					user,
+					transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page ),
+					budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page),
+					goals : goalList.slice(perPage * g_page - perPage, perPage * g_page),
+					t_page,
+					b_page,
+					g_page,
+					t_pages : Math.ceil(transactionList.length/perPage),
+					b_pages : Math.ceil(budgetList.length/perPage),
+					g_pages : Math.ceil(goalList.length/perPage)
+				}      
+				res.render('main', locals) 
          })
-         child_process.stderr.on('data', async (data) =>{
-            console.error(`stderr: ${data}`);
-
-         })
-         child_process.on('close', async(code) =>{
-            console.log(`child process exited with code ${code}`);
-
-            session = await findSession(hostname);
-      var transactionList = [...session.transactionList, ...session.transactionRag];
-      var budgetList = [...session.budgetList, ...session.budgetRag];
-      var goalList = [...session.goalList, ...session.goalRag];
-
-      console.log("back in user controller", transactionList)
-      if(!(transactionList || budgetList || goalList)){
-         await updateMessages(hostname, ["No Results Found."]);
-         res.redirect('/dashboard');
-       
-      }  
-  
-      let perPage = 3;
-      let t_page = req.query.t_page || 1;
-      let b_page = req.query.b_page || 1;
-      let g_page = req.query.g_page || 1;
-      const locals = {
-         title : 'Search User Query',
-         description : 'Budgetier Search User Query',
-         file : './dashboard/search.ejs',
-         messages : [],
-         board : "search",
-         info : {
-            name : `Search User Query`,          
-            page : 'search',
-         },
-         user,
-         transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
-         budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
-         goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
-         t_page,
-         b_page,
-         g_page,
-         t_pages : Math.ceil(transactionList.length/perPage),
-         b_pages : Math.ceil(budgetList.length/perPage),
-         g_pages : Math.ceil(goalList.length/perPage)
-         }
-      
-      
-        res.render('main', locals) }
-      )
-      }
+         
+		}      
       else{
       session = await findSession(hostname);
-      var transactionList = session.transactionList;
-      var budgetList = session.budgetList;
-      var goalList = session.goalList;
+      transactionList = session.transactionList;
+      budgetList = session.budgetList;
+      goalList = session.goalList;
 
       console.log("back in user controller", transactionList)
       if(!(transactionList || budgetList || goalList)){
@@ -556,10 +595,11 @@ exports.search = async(req, res) => {
    }    
 }
 
+// Handle paginated Search Display
 exports.searchDisplay = async(req, res) =>{
-   
+ 
    var session = await findSession(hostname);
-   res.json("In SearchDisplay");
+  
    try{
       var session = await findSession(hostname);
 
@@ -570,13 +610,16 @@ exports.searchDisplay = async(req, res) =>{
          const userID = session.userID;
          const user = await findUser(userID);
          await logActivity(hostname);
+        			
          var transactionList = session.transactionList;
          var budgetList = session.budgetList;
          var goalList = session.goalList;
+
          let perPage = 3;
          let t_page = req.query.t_page || 1;
          let b_page = req.query.b_page || 1;
          let g_page = req.query.g_page || 1;
+
          const locals = {
             title : 'Search User Query',
             description : 'Budgetier Search User Query',
@@ -588,9 +631,9 @@ exports.searchDisplay = async(req, res) =>{
                page : 'search',
             },
             user,
-            transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page + 1),
-            budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page + 1),
-            goals : goalList.slice(perPage * g_page - perPage, perPage * g_page + 1),
+            transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page),
+            budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page),
+            goals : goalList.slice(perPage * g_page - perPage, perPage * g_page),
             t_page,
             b_page,
             g_page,
@@ -598,8 +641,8 @@ exports.searchDisplay = async(req, res) =>{
             b_pages : Math.ceil(budgetList.length/perPage),
             g_pages : Math.ceil(goalList.length/perPage)
 
-      }
-      res.render('main', locals)
+         }
+         res.render('main', locals)
       }
 
    }catch(error){
