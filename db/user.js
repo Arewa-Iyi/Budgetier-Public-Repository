@@ -17,7 +17,7 @@ const dollarfy = async(amount)=>{
 
 /**
  * Function to add a user to the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} firstName - The name of the user. 
  * @param {String} lastName - The name of the user. 
  * @param {String} entry - The string provided to access user account.
@@ -52,7 +52,7 @@ const  addUser = async (firstName, lastName, email, entry, amount =0)=> {
 
 /**
  * Function to find a user instance with an email in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} email - The current email of the User instance.
  * @returns {Object} The instance of the associated user object.
  * Returns null if User collection is unassociated with email provided.
@@ -68,7 +68,7 @@ const getUser = async(email) => {
 
 /**
  * Function to find a user instance with unique _id in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} userID - The unique id of the User instance. 
  * @returns {Object} The instance of the associated user object.
  * Returns null if User collection is unassociated with email provided.
@@ -96,7 +96,7 @@ const updateUser = async(userID, firstName, lastName, email, totalAmount) => {
 }
 /**
  * Function to confirm login of a user instance in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} email - The current email of the User instance.
  * @param {String} entry - The string provided to access user account.
  * @returns {Object} An array in the following indices:
@@ -122,7 +122,7 @@ const loginUser = async(email, entry) => {
 }
 /**
  * Function to update the toatal amount in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} userID - The unique id of the User instance. 
  * @param {Double} newAmount - The updated total amount currently available.
  * @returns {Object} The updated instance of the user object. 
@@ -144,7 +144,7 @@ const updateTotalAmount = async(userID, newAmount)=>{
 
 /**
  * Function to update the user's name in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} userID - The unique id of the User instance. 
  * @param {String} newName - The updated name.
  * @returns {Object} The updated instance of the user object. 
@@ -166,7 +166,7 @@ const updateName = async(userID, newFirst, newLast)=> {
 
 /**
  * Function to update the user's email in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} userID - The unique id of the User instance. 
  * @param {String} oldEmail - The current email of the User instance.
  * @param {String} newEmail - The updated email of the User instance.
@@ -195,7 +195,7 @@ const updateEmail = async (userID, oldEmail, newEmail) => {
 
 /**
  * Function to update credentials of a user instance in the User collection of the 
- * Expense Tracer Accounts database.
+ * Budgetier Accounts database.
  * @param {String} userID - The current unique id of the User instance.
  * @param {String} oldEntry - The current string to access user account.
  * @param {String} newEntry - The updated string provided to access user account.
