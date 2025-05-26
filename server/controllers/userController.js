@@ -446,20 +446,30 @@ exports.search = async(req, res) => {
    try{
       var session = await findSession(hostname);
 
+      // redirect to login if session is not authenticated
       if(!(session.authenticated)){
          res.redirect('/login');
       }
    
+      // populate userID and user information
       const userID = session.userID;
       const user = await findUser(userID);
+      
+      // log activity for session to increase duration by 15 minutes
       await logActivity(hostname);
+
+      // Clear previous search lists in session handler
       await clearSearch(hostname, userID);
+
+      // Retreive and split searchTerm by space delimiter
       let searchTerm = req.body.searchTerm;
       let search  = searchTerm.split(" "); 
       let query = "";
       let transactionList = [];
       let budgetList = [];
-      let goalList = []
+      let goalList = [];
+
+      // Conduct a RegEx search for each search term
       search.forEach(async el =>{
 
          let path = 3;
@@ -475,17 +485,23 @@ exports.search = async(req, res) => {
          else if (!isNaN(Date.parse(el))){
             path = 2
          }
-         else{query = query + search}
+         {query = query + search} // append search element to query if path requirements are not met
+
+         // conduct RegEx Search for requested collections with appropriate path
          transactions = await searchTransaction(userID,el,path);
          budgets      = await searchBudget(userID,el,path);
          goals        = await searchGoal(userID,el,path);   
 
+         // save results to session search list handler
          await saveSearchResults(hostname, userID, transactions, budgets, goals);
       })
+      // If there is a query
       if(query){
 
-			console.log("conducting Rag Search.")
-			const child_process = spawn('python', ['./server/controllers/rag.py', userID, query, hostname])
+			console.log("conducting Rag Search.") // conduct RAG Search
+
+         // Run rag.py in a child process to conduct RAG Search
+			const child_process = spawn('python', ['./server/controllers/rag.py', userID, query])
 			child_process.stdout.on('data', async (data) =>{
 				console.log(`Logging : ${data}`);
 
@@ -495,62 +511,31 @@ exports.search = async(req, res) => {
 
 			})
 			child_process.on('close', async(code) =>{
-         
+            
+            // Assign RAG search results to appropriate variables
 				const t_results = require('./results/t_results.json');
 				const b_results = require('./results/b_results.json');
 				const g_results = require('./results/g_results.json');
 
+            // Strigify concatenated lists of Regex Search and RAG Search
 				transactionList = JSON.parse(JSON.stringify([...session.transactionList, ...t_results]));
 				budgetList = JSON.parse(JSON.stringify([...session.budgetList, ...b_results]));
 				goalList = JSON.parse(JSON.stringify([...session.goalList, ...g_results]));           
             
-              
-            
-            await saveSearchResults(hostname, userID, transactionList, budgetList, goalList);
-            
-				console.log(`child process exited with code ${code}`);
-
+            // If all lists are empty redirect to main dashboard with no results message.
 				if(!(transactionList || budgetList || goalList)){
 				   await updateMessages(hostname, ["No Results Found."]);
 				   res.redirect('/dashboard');
-				}  
-		  
-				let perPage = 3;
-				let t_page = req.query.t_page || 1;
-				let b_page = req.query.b_page || 1;
-				let g_page = req.query.g_page || 1;
-				const locals = {
-					title : 'Search User Query',
-					description : 'Budgetier Search User Query',
-					file : './dashboard/search.ejs',
-					messages : [],
-					board : "search",
-					info : {
-						name : `Search User Query`,          
-						page : 'search',
-					},
-					user,
-					transactions : transactionList.slice(perPage * t_page - perPage, perPage * t_page ),
-					budgets : budgetList.slice(perPage * b_page - perPage, perPage * b_page),
-					goals : goalList.slice(perPage * g_page - perPage, perPage * g_page),
-					t_page,
-					b_page,
-					g_page,
-					t_pages : Math.ceil(transactionList.length/perPage),
-					b_pages : Math.ceil(budgetList.length/perPage),
-					g_pages : Math.ceil(goalList.length/perPage)
-				}      
-				res.render('main', locals) 
+				} 
+
+            // Save updated results in appropriate session fields
+            await saveSearchResults(hostname, userID, transactionList, budgetList, goalList);
+            
+				console.log(`child process exited with code ${code}`); 
          })
          
 		}      
-      else{
-      session = await findSession(hostname);
-      transactionList = session.transactionList;
-      budgetList = session.budgetList;
-      goalList = session.goalList;
-
-      console.log("back in user controller", transactionList)
+   
       if(!(transactionList || budgetList || goalList)){
          await updateMessages(hostname, ["No Results Found."]);
          res.redirect('/dashboard');
@@ -561,6 +546,8 @@ exports.search = async(req, res) => {
       let t_page = req.query.t_page || 1;
       let b_page = req.query.b_page || 1;
       let g_page = req.query.g_page || 1;
+      
+      // Assign appropriate values for locals document.
       const locals = {
          title : 'Search User Query',
          description : 'Budgetier Search User Query',
@@ -582,9 +569,9 @@ exports.search = async(req, res) => {
          b_pages : Math.ceil(budgetList.length/perPage),
          g_pages : Math.ceil(goalList.length/perPage)
          
-
       }
-      res.render('main', locals) }
+      // Display Search Results
+      res.render('main', locals) 
       
       
    }
